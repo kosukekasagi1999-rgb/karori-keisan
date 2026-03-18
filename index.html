@@ -8,18 +8,23 @@
 <meta name="apple-mobile-web-app-title" content="カロリー記録">
 <meta name="theme-color" content="#0d0f14">
 <title>NutriLog</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg:#141720;--bg2:#1a1e2a;--surface:#222638;
   --border:rgba(255,255,255,0.10);--border2:rgba(255,255,255,0.18);
   --green:#a8ff6e;--green-dim:#4a7a2a;--teal:#5eead4;--orange:#fb923c;
   --text:#e8edf5;--text2:#8b92a8;--text3:#adb5c8;--danger:#f87171;
-  --radius:16px;--radius-sm:10px;--font:-apple-system,BlinkMacSystemFont,'Helvetica Neue','Hiragino Sans','Yu Gothic','Meiryo',sans-serif;
+  --radius:16px;--radius-sm:10px;--font:'Outfit','Noto Sans JP',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;overscroll-behavior:none;}
+html,body{min-height:100%;}
 body{background:var(--bg);color:var(--text);font-family:var(--font);
-  min-height:100svh;padding-bottom:calc(72px + env(safe-area-inset-bottom));
+  min-height:100svh;padding-bottom:calc(110px + env(safe-area-inset-bottom));
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
   -webkit-font-smoothing:antialiased;}
 ::-webkit-scrollbar{width:0;}
 
@@ -38,7 +43,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 .date-pill{flex:1;text-align:center;background:var(--surface);border:1px solid var(--border2);
   border-radius:10px;padding:7px 12px;font-size:14px;font-weight:500;cursor:pointer;}
 
-.page{display:none;padding:0 0 16px;}
+.page{display:none;padding:0 0 32px;min-height:calc(100svh - 110px);overflow:visible;}
 .page.active{display:block;}
 
 /* SUMMARY */
@@ -111,7 +116,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 .fab:active{transform:scale(.93);}
 
 /* LOG */
-.log-list{padding:0 16px;display:flex;flex-direction:column;gap:8px;}
+.log-list{padding:0 16px 24px;display:flex;flex-direction:column;gap:8px;}
 .log-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
   padding:13px 14px;display:flex;align-items:center;gap:12px;animation:fadeUp .2s ease both;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
@@ -146,7 +151,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
   display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
 .banner-title{font-size:15px;font-weight:700;color:var(--green);}
 .banner-sub{font-size:12px;color:var(--text2);margin-top:3px;line-height:1.5;}
-.food-list{padding:0 16px;display:flex;flex-direction:column;gap:8px;}
+.food-list{padding:0 16px 28px;display:flex;flex-direction:column;gap:8px;}
 .food-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
   padding:13px 14px;display:flex;align-items:center;gap:12px;}
 .food-emoji{font-size:24px;width:38px;text-align:center;flex-shrink:0;}
@@ -188,6 +193,32 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
   cursor:pointer;padding:4px 0;transition:color .15s;font-family:var(--font);}
 .nav-btn.active{color:var(--green);}
 .nav-ico{font-size:22px;line-height:1;}
+
+
+/* DATE STATE */
+.date-state{margin:0 16px 8px;padding:10px 12px;border-radius:12px;border:1px solid rgba(94,234,212,.22);
+  background:rgba(94,234,212,.06);font-size:12px;color:var(--teal);display:none;}
+.date-state.show{display:block;}
+
+/* BULK ORDER */
+.bulk-row{display:flex;align-items:center;gap:10px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;}
+.bulk-emoji{font-size:22px;width:34px;text-align:center;flex-shrink:0;}
+.bulk-info{flex:1;min-width:0;}
+.bulk-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bulk-mac{font-size:11px;color:var(--text2);margin-top:2px;}
+.bulk-stepper{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.bulk-btn{width:34px;height:34px;border-radius:10px;border:1px solid var(--border2);background:var(--surface);
+  color:var(--text);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.bulk-qty{min-width:24px;text-align:center;font-size:18px;font-weight:700;}
+.bulk-footer{position:sticky;bottom:0;margin:12px -20px 0;padding:12px 20px calc(14px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,rgba(26,30,42,0),rgba(26,30,42,.95) 18%,rgba(26,30,42,1) 38%);
+  border-top:1px solid var(--border);}
+.bulk-summary{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px;font-size:12px;color:var(--text2);}
+.bulk-summary b{color:var(--text);font-size:14px;}
+.bulk-add-btn{width:100%;background:var(--green);color:#0d0f14;border:none;padding:14px;border-radius:var(--radius-sm);
+  font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font);}
+.bulk-add-btn:disabled{opacity:.45;cursor:not-allowed;}
 
 /* MODAL */
 .overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.60);
@@ -264,11 +295,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
   </div>
 </div>
 
-
-<div id="storageBanner" style="margin:10px 16px 0;padding:10px 12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);border-radius:12px;color:#fca5a5;font-size:12px;line-height:1.7;display:none;">
-  この開き方では自動保存が不安定です。右下の「目標」→「JSONで書き出し」でバックアップしてください。
-</div>
-
 <!-- PAGE: 記録 -->
 <div class="page active" id="page-log">
   <div class="summary">
@@ -313,6 +339,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
       </div>
     </div>
   </div>
+  <div class="date-state" id="dateState"></div>
 
   <div class="stack" style="padding:0 16px;margin:6px 0;">
     <!-- モード選択 -->
@@ -437,12 +464,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
     </div>
     <div class="goals-card">
       <div class="card-title">データ管理</div>
-      <button class="btn-ghost" onclick="exportData()">📤  JSONで書き出し</button>
-      <button class="btn-ghost" onclick="triggerImport()">📥  JSONを読み込む</button>
-      <input type="file" id="importJson" accept="application/json" style="display:none" onchange="importData(event)">
-      <div style="font-size:11px;color:var(--text2);line-height:1.8;margin:10px 0 0;padding:10px 12px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border);">
-        オフライン専用版です。自動保存はまず端末内に保存されます。iPhoneのローカルHTMLでは保存領域が不安定なことがあるため、念のため定期的にJSON書き出しもしておくと安全です。
-      </div>
+      <button class="btn-ghost" onclick="exportData()">📤  JSONでエクスポート</button>
       <button class="btn-danger" onclick="confirmClear()">🗑  全データを削除</button>
     </div>
   </div>
@@ -480,20 +502,20 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
   </div>
 </div>
 
+
 <!-- MODAL: 記録追加 -->
 <div class="overlay" id="mAddLog" onclick="overlayClose('mAddLog',event)">
   <div class="sheet">
     <div class="handle"></div>
-    <div class="step-badge">STEP 1 — 食品を選ぶ</div>
+    <div class="step-badge">STEP 1 — まとめて選ぶ</div>
     <div class="sheet-title">何を食べましたか？</div>
     <input class="sheet-input" id="logSearch" placeholder="🔍  食品名で絞り込み…" oninput="renderLogList()" autocomplete="off" style="margin-bottom:14px">
-    <div id="logFoodList" style="max-height:40svh;overflow-y:auto;padding-bottom:4px"></div>
+    <div id="logFoodList" style="max-height:42svh;overflow-y:auto;padding-bottom:4px"></div>
     <div id="logNoFood" style="display:none;text-align:center;padding:20px 0;color:var(--text2);font-size:13px;line-height:2.2">
       <div style="font-size:36px;margin-bottom:8px;opacity:.3">🥗</div>
       食品が登録されていません<br>
       <span style="color:var(--teal);cursor:pointer;font-weight:600" onclick="closeModal('mAddLog');switchPage('foods')">「食品タブ」で追加する →</span>
     </div>
-    <!-- 一時記録 -->
     <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
       <div style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">⚡ その場限りで記録（リスト登録なし）</div>
       <div style="display:flex;flex-direction:column;gap:8px">
@@ -505,8 +527,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
         <button class="btn-ok" style="width:100%;margin-top:2px" onclick="logOneTime()">この内容で記録する →</button>
       </div>
     </div>
+    <div class="bulk-footer">
+      <div class="bulk-summary">
+        <span>品数 <b id="bulkCount">0</b></span>
+        <span>合計 kcal <b id="bulkCal">0</b></span>
+        <span>合計たんぱく質 <b id="bulkProt">0g</b></span>
+      </div>
+      <button class="bulk-add-btn" id="bulkAddBtn" onclick="confirmBulkLog()" disabled>選んだ食品を追加する</button>
+    </div>
   </div>
 </div>
+
 
 <!-- MODAL: 数量 -->
 <div class="overlay" id="mQty" onclick="overlayClose('mQty',event)">
@@ -533,25 +564,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 <script>
 let S = { date: todayStr(), logs:{}, foods:[], goals:{cal:2200,prot:130}, dayTypes:{}, weights:{}, deficit:{target:28800,burnTrain:2700,burnOff:2400} };
 const EMOJIS = ['🍚','🍗','🥩','🐟','🥛','🥚','🥦','🥕','🍌','🍎','🍞','🧀','🥜','🍜','🥗','🍱','🍙','🥙','🌮','🍳','☕','🧃','🥤','🍫','🍪','🫘','🦐','🥑','🫐','💪','🌾','🍡'];
-let selEmoji='🍚', pendingFood=null, pendingQty=1;
+let selEmoji='🍚', pendingFood=null, pendingQty=1, pendingBulk={};
 
-const STORE_KEY='nlog3';
-let storageAvailable=true;
-function save(){
-  try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); storageAvailable=true; }
-  catch(e){ storageAvailable=false; updateStorageBanner(); }
-}
-function load(){
-  try{ const d=localStorage.getItem(STORE_KEY); if(d) S={...S,...JSON.parse(d)}; storageAvailable=true; }
-  catch(e){ storageAvailable=false; }
-  updateStorageBanner();
-}
-function updateStorageBanner(){
-  const el=document.getElementById('storageBanner');
-  if(!el) return;
-  el.style.display=storageAvailable ? 'none' : 'block';
-}
-
+function save(){ try{localStorage.setItem('nlog3',JSON.stringify(S));}catch(e){} }
+function load(){ try{ const d=localStorage.getItem('nlog3'); if(d) S={...S,...JSON.parse(d)}; }catch(e){} }
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function fmtDate(s){ const d=new Date(s+'T00:00:00'); return d.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'}); }
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
@@ -678,12 +694,12 @@ function saveWeight(){ if(!S.weights)S.weights={}; const v=document.getElementBy
 function loadWeight(){ if(!S.weights)S.weights={}; const v=S.weights[S.date]; document.getElementById('weightInput').value=v||''; }
 
 // Chart
+
 function renderChart(){
   const canvas=document.getElementById('calChart'); if(!canvas)return;
   const goal=S.goals.cal||2200;
   document.getElementById('chartGoalLbl').textContent='目標 '+goal.toLocaleString()+' kcal';
 
-  // 直近7日のデータ収集
   const days=[];
   for(let i=6;i>=0;i--){
     const dt=new Date(S.date+'T00:00:00'); dt.setDate(dt.getDate()-i);
@@ -691,34 +707,46 @@ function renderChart(){
     const logs=S.logs[dateStr]||[]; let cal=0;
     logs.forEach(l=>{ if(l.tmpName){cal+=l.tmpCal;return;} const f=S.foods.find(f=>f.id===l.fid); if(f)cal+=f.cal*l.qty; });
     const label=dt.toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'});
-    const isToday=dateStr===S.date;
-    days.push({label, cal:Math.round(cal), isToday, dateStr});
+    days.push({label, cal:Math.round(cal), isToday:dateStr===S.date, dateStr});
   }
 
   const dpr=window.devicePixelRatio||1;
   const W=canvas.parentElement.clientWidth-28;
-  const H=110;
+  const H=152;
   canvas.width=W*dpr; canvas.height=H*dpr;
   canvas.style.width=W+'px'; canvas.style.height=H+'px';
   const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
 
-  const maxVal=Math.max(goal*1.3, ...days.map(d=>d.cal), 100);
-  const padL=36, padR=8, padT=8, padB=22;
+  const highest=Math.max(goal, ...days.map(d=>d.cal), 500);
+  const maxVal=Math.ceil(highest/500)*500;
+  const smallStep=100, midStep=500;
+  const padL=40, padR=8, padT=8, padB=24;
   const chartW=W-padL-padR, chartH=H-padT-padB;
 
-  // 目標ライン
+  for(let v=0; v<=maxVal; v+=smallStep){
+    const y=padT+chartH*(1-v/maxVal);
+    const isMid=v%midStep===0;
+    ctx.strokeStyle=isMid?'rgba(255,255,255,0.16)':'rgba(255,255,255,0.06)';
+    ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padL+chartW,y); ctx.stroke();
+    if(isMid && v<maxVal){
+      ctx.fillStyle='rgba(139,146,168,0.85)';
+      ctx.font='9px Outfit,sans-serif';
+      ctx.textAlign='right';
+      ctx.fillText(v.toLocaleString(), padL-4, y+3);
+    }
+  }
+
   const goalY=padT+chartH*(1-goal/maxVal);
   ctx.setLineDash([4,4]);
-  ctx.strokeStyle='rgba(168,255,110,0.35)';
-  ctx.lineWidth=1.5;
+  ctx.strokeStyle='rgba(168,255,110,0.55)';
+  ctx.lineWidth=1.4;
   ctx.beginPath(); ctx.moveTo(padL,goalY); ctx.lineTo(padL+chartW,goalY); ctx.stroke();
   ctx.setLineDash([]);
-
-  // 目標ラベル
-  ctx.fillStyle='rgba(168,255,110,0.6)';
-  ctx.font='9px Outfit,sans-serif';
+  ctx.fillStyle='rgba(168,255,110,0.85)';
+  ctx.font='bold 9px Outfit,sans-serif';
   ctx.textAlign='right';
-  ctx.fillText(goal.toLocaleString(), padL-4, goalY+3);
+  ctx.fillText('目標', padL-4, Math.max(10, goalY-4));
 
   const barW=Math.min(32, (chartW/7)*0.62);
   const gap=chartW/7;
@@ -727,58 +755,50 @@ function renderChart(){
     const x=padL+gap*i+gap/2;
     const barH=d.cal>0?Math.max(3, chartH*(d.cal/maxVal)):0;
     const y=padT+chartH-barH;
-
-    // バー色
     const over=d.cal>goal;
+
     if(over){
-      // 目標内部分（緑）
       const safeH=chartH*(goal/maxVal);
-      const overH=barH-safeH;
-      // 緑部分
-      ctx.fillStyle='rgba(168,255,110,0.5)';
+      const overH=Math.max(0, barH-safeH);
+      ctx.fillStyle='rgba(168,255,110,0.52)';
       ctx.beginPath();
       ctx.roundRect(x-barW/2, padT+chartH-safeH, barW, safeH, [3,3,0,0]);
       ctx.fill();
-      // 赤部分（超過分）
-      ctx.fillStyle=d.isToday?'#f87171':'rgba(248,113,113,0.7)';
+
+      ctx.fillStyle=d.isToday?'#f87171':'rgba(248,113,113,0.72)';
       ctx.beginPath();
       ctx.roundRect(x-barW/2, y, barW, overH, [3,3,0,0]);
       ctx.fill();
-    } else {
-      ctx.fillStyle=d.isToday?'#a8ff6e':'rgba(168,255,110,0.5)';
-      if(d.cal>0){
-        ctx.beginPath();
-        ctx.roundRect(x-barW/2, y, barW, barH, [3,3,0,0]);
-        ctx.fill();
-      }
+    } else if(d.cal>0){
+      ctx.fillStyle=d.isToday?'#a8ff6e':'rgba(168,255,110,0.52)';
+      ctx.beginPath();
+      ctx.roundRect(x-barW/2, y, barW, barH, [3,3,0,0]);
+      ctx.fill();
     }
 
-    // 今日ハイライト（底に点）
     if(d.isToday){
       ctx.fillStyle='#a8ff6e';
-      ctx.beginPath(); ctx.arc(x, H-padB+10, 3, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x, H-padB+12, 3, 0, Math.PI*2); ctx.fill();
     }
 
-    // 数値ラベル（オーバー時のみ上に表示）
     if(over && d.cal>0){
       ctx.fillStyle='#f87171';
       ctx.font='bold 9px Outfit,sans-serif';
       ctx.textAlign='center';
-      ctx.fillText('+'+Math.round(d.cal-goal), x, y-3);
+      ctx.fillText('+'+Math.round(d.cal-goal), x, y-4);
     }
 
-    // 日付ラベル
-    ctx.fillStyle=d.isToday?'#e8edf5':'rgba(139,146,168,0.8)';
-    ctx.font=(d.isToday?'bold ':'')+' 9px Outfit,sans-serif';
+    ctx.fillStyle=d.isToday?'#e8edf5':'rgba(139,146,168,0.82)';
+    ctx.font=(d.isToday?'bold ':'')+'9px Outfit,sans-serif';
     ctx.textAlign='center';
-    ctx.fillText(d.label, x, H-padB+18);
+    ctx.fillText(d.label, x, H-padB+20);
   });
 
-  // Y軸ゼロライン
   ctx.strokeStyle='rgba(255,255,255,0.08)';
   ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(padL,padT+chartH); ctx.lineTo(padL+chartW,padT+chartH); ctx.stroke();
 }
+
 
 // Log
 function renderLog(){
@@ -849,27 +869,7 @@ function renderGoals(){ document.getElementById('goalCalIn').value=S.goals.cal||
 function saveGoals(){ S.goals.cal=parseInt(document.getElementById('goalCalIn').value)||2200; S.goals.prot=parseInt(document.getElementById('goalProtIn').value)||130; if(!S.deficit)S.deficit={}; S.deficit.target=parseInt(document.getElementById('goalDeficit').value)||28800; S.deficit.burnTrain=parseInt(document.getElementById('goalBurnTrain').value)||2700; S.deficit.burnOff=parseInt(document.getElementById('goalBurnOff').value)||2400; save();renderSummary();renderDeficit();renderDeficitGoalsPage();showToast('保存しました ✓'); }
 function renderDeficitGoalsPage(){ const total=calcTotalDeficit(); const target=(S.deficit&&S.deficit.target)||28800; const pct=Math.min(100,Math.max(0,(total/target)*100)); const bar=document.getElementById('defBar2'); if(!bar)return; bar.style.width=pct+'%'; document.getElementById('defNow2').textContent=total.toLocaleString(); document.getElementById('defTarget2').textContent='/ '+target.toLocaleString()+' kcal'; const days=Object.keys(S.dayTypes||{}).length; const etaEl=document.getElementById('defEta2'); if(days>0&&total>0){ const avg=total/days; const rem=target-total; const dL=rem>0?Math.ceil(rem/avg):0; etaEl.textContent=dL>0?'あと約'+dL+'日でゴール 🏁':'🎉 目標達成！'; etaEl.style.color=dL===0?'var(--green)':'var(--text2)'; }else{etaEl.textContent='モードを選ぶと進捗が記録されます';} }
 
-function exportData(){ const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='nutrilog-'+todayStr()+'.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000); showToast('JSONを書き出しました ✓'); }
-function triggerImport(){ document.getElementById('importJson').click(); }
-function importData(event){
-  const file = event.target.files && event.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    try{
-      const data = JSON.parse(reader.result);
-      S = { ...S, ...data };
-      save();
-      renderDate(); renderLog(); renderGoals(); renderFoods();
-      showToast('JSONを読み込みました ✓');
-    }catch(e){
-      alert('JSONの読み込みに失敗しました');
-    }finally{
-      event.target.value='';
-    }
-  };
-  reader.readAsText(file, 'utf-8');
-}
+function exportData(){ const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='nutrilog-'+todayStr()+'.json'; a.click(); }
 function confirmClear(){ if(confirm('全データを削除しますか？この操作は元に戻せません。')){ S.logs={};S.foods=[];S.dayTypes={};S.weights={}; save();renderLog();renderFoods();showToast('削除しました'); } }
 
 // Modal
