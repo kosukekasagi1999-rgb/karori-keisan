@@ -43,7 +43,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 .date-pill{flex:1;text-align:center;background:var(--surface);border:1px solid var(--border2);
   border-radius:10px;padding:7px 12px;font-size:14px;font-weight:500;cursor:pointer;}
 
-.page{display:none;padding:0 0 32px;min-height:calc(100svh - 110px);overflow:visible;}
+.page{display:none;padding:0 0 32px;overflow:visible;}
 .page.active{display:block;}
 
 /* SUMMARY */
@@ -61,8 +61,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 .ring-num{font-size:15px;font-weight:700;color:var(--green);line-height:1;}
 .ring-label{font-size:9px;color:var(--text2);letter-spacing:.06em;margin-top:1px;}
 .summary-right{flex:1;}
-.macro-block{margin-bottom:7px;}
+.macro-block{margin-bottom:12px;}
 .macro-block:last-child{margin-bottom:0;}
+.marker-bar{margin-top:18px;}
 .macro-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}
 .macro-name{font-size:12px;color:var(--text2);}
 .macro-val{font-size:13px;font-weight:600;}
@@ -73,6 +74,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 .bar-fill.cal{background:linear-gradient(90deg,var(--green-dim),var(--green));}
 .bar-fill.prot{background:linear-gradient(90deg,#0d9488,var(--teal));}
 .goal-sub{font-size:10px;color:var(--text2);margin-top:3px;}
+.bar-marker{position:absolute;top:-18px;width:2px;height:24px;display:none;pointer-events:none;transform:translateX(-50%);z-index:2;}
+.bar-marker-line{position:absolute;left:0;top:8px;bottom:0;width:2px;border-radius:2px;}
+.bar-marker-tag{position:absolute;top:0;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:8px;font-weight:700;line-height:1;padding:3px 5px;border-radius:999px;background:rgba(20,23,32,.96);border:1px solid currentColor;box-shadow:0 2px 8px rgba(0,0,0,.25);max-width:72px;overflow:hidden;text-overflow:ellipsis;}
+.bar-marker.edge-left .bar-marker-tag{left:0;transform:none;}
+.bar-marker.edge-right .bar-marker-tag{left:auto;right:0;transform:none;}
 
 /* MODE CARD */
 .mode-card{margin:0 16px;background:var(--surface);border:1px solid var(--border2);
@@ -294,6 +300,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
     <button class="arrow-btn" onclick="changeDate(1)">›</button>
   </div>
 </div>
+<div id="editingDateNotice" style="display:none;margin:10px 16px 0;padding:10px 12px;background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.28);border-radius:12px;color:#fdba74;font-size:12px;font-weight:600"></div>
 
 <!-- PAGE: 記録 -->
 <div class="page active" id="page-log">
@@ -315,15 +322,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
             <span class="macro-name">カロリー</span>
             <span class="macro-val cal" id="sumCal">0 kcal</span>
           </div>
-          <div class="bar" style="position:relative">
+          <div class="bar marker-bar" style="position:relative">
             <div class="bar-fill cal" id="barCal" style="width:0%"></div>
-            <div id="markerGoalCal" style="position:absolute;top:-14px;bottom:-16px;width:2px;background:rgba(168,255,110,0.85);display:none;pointer-events:none;transform:translateX(-50%)">
-              <div style="position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:8px;font-weight:700;color:rgba(168,255,110,0.9);letter-spacing:.03em" id="markerGoalLbl"></div>
-              <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:8px;font-weight:700;color:rgba(168,255,110,0.9)" id="markerGoalTop">目標</div>
+            <div id="markerGoalCal" class="bar-marker">
+              <div class="bar-marker-tag" style="color:rgba(168,255,110,0.95)" id="markerGoalTop">目標 2200</div>
+              <div class="bar-marker-line" style="background:rgba(168,255,110,0.85)"></div>
             </div>
-            <div id="markerBurnCal" style="position:absolute;top:-14px;bottom:-16px;width:2px;background:rgba(251,146,60,0.85);display:none;pointer-events:none;transform:translateX(-50%)">
-              <div style="position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:8px;font-weight:700;color:rgba(251,146,60,0.9)" id="markerBurnLbl"></div>
-              <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:8px;font-weight:700;color:rgba(251,146,60,0.9)" id="markerBurnTop"></div>
+            <div id="markerBurnCal" class="bar-marker">
+              <div class="bar-marker-tag" style="color:rgba(251,146,60,0.95)" id="markerBurnTop">オフ 2400</div>
+              <div class="bar-marker-line" style="background:rgba(251,146,60,0.85)"></div>
             </div>
           </div>
           <div class="goal-sub" id="goalCalLbl"></div>
@@ -568,14 +575,17 @@ let selEmoji='🍚', pendingFood=null, pendingQty=1, pendingBulk={};
 
 function save(){ try{localStorage.setItem('nlog3',JSON.stringify(S));}catch(e){} }
 function load(){ try{ const d=localStorage.getItem('nlog3'); if(d) S={...S,...JSON.parse(d)}; }catch(e){} }
-function todayStr(){ return new Date().toISOString().slice(0,10); }
-function fmtDate(s){ const d=new Date(s+'T00:00:00'); return d.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'}); }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function parseDateStr(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,(m||1)-1,d||1); }
+function dateToStr(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function fmtDate(s){ const d=parseDateStr(s); return d.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'}); }
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
 
 // Date
-function renderDate(){ document.getElementById('datePill').textContent=fmtDate(S.date); }
-function changeDate(d){ const dt=new Date(S.date+'T00:00:00'); dt.setDate(dt.getDate()+d); S.date=dt.toISOString().slice(0,10); renderDate();renderLog();save(); }
+function renderDate(){ document.getElementById('datePill').textContent=fmtDate(S.date); const n=document.getElementById('editingDateNotice'); if(!n)return; if(S.date!==todayStr()){ n.style.display='block'; n.textContent='編集中の日付: '+fmtDate(S.date); } else { n.style.display='none'; } }
+function changeDate(d){ const dt=parseDateStr(S.date); dt.setDate(dt.getDate()+d); S.date=dateToStr(dt); renderDate();renderLog();save(); }
 function goToday(){ S.date=todayStr(); renderDate();renderLog();save(); }
 function openDatePicker(){ const e=document.getElementById('hiddenDate'); e.value=S.date; e.click(); }
 function onDatePicked(){ const v=document.getElementById('hiddenDate').value; if(v){S.date=v;renderDate();renderLog();save();} }
@@ -613,28 +623,34 @@ function renderSummary(){
   // バー幅をmaxCalベースで再計算
   document.getElementById('barCal').style.width=Math.min(100,(currentCal/maxCal)*100)+'%';
 
+  function setMarkerPosition(el, pct){
+    if(!el) return;
+    el.classList.remove('edge-left','edge-right');
+    const clamped=Math.max(2, Math.min(98, pct));
+    el.style.left=clamped+'%';
+    if(clamped < 12) el.classList.add('edge-left');
+    if(clamped > 88) el.classList.add('edge-right');
+    el.style.display='block';
+  }
+
   // 目標カロリーマーカー（緑）
   const mGoal=document.getElementById('markerGoalCal');
   if(mGoal){
     const pct=(gc/maxCal)*100;
-    mGoal.style.left=pct+'%';
-    mGoal.style.display='block';
-    const lbl=document.getElementById('markerGoalLbl');
-    if(lbl) lbl.textContent=gc.toLocaleString();
+    setMarkerPosition(mGoal, pct);
+    const topLbl=document.getElementById('markerGoalTop');
+    if(topLbl) topLbl.textContent='目標 '+gc.toLocaleString();
   }
 
   // 消費カロリーマーカー（モード選択時のみ・オレンジ）
   const mBurn=document.getElementById('markerBurnCal');
   if(mBurn){
     if(burn){
-      const pct=Math.min(98,(burn/maxCal)*100);
-      mBurn.style.left=pct+'%';
-      mBurn.style.display='block';
+      const pct=(burn/maxCal)*100;
+      setMarkerPosition(mBurn, pct);
       const dayType=(S.dayTypes||{})[S.date];
       const topLbl=document.getElementById('markerBurnTop');
-      const botLbl=document.getElementById('markerBurnLbl');
-      if(topLbl) topLbl.textContent=dayType==='train'?'筋トレ':'オフ';
-      if(botLbl) botLbl.textContent=burn.toLocaleString();
+      if(topLbl) topLbl.textContent=(dayType==='train'?'筋トレ':'オフ')+' '+burn.toLocaleString();
     } else {
       mBurn.style.display='none';
     }
@@ -832,16 +848,66 @@ function renderLog(){
 function delLog(id){ S.logs[S.date]=(S.logs[S.date]||[]).filter(l=>l.id!==id); renderLog();renderChart();save();showToast('削除しました'); }
 
 // Add Log
-function openAddLog(){ document.getElementById('logSearch').value=''; document.getElementById('tmpName').value=''; document.getElementById('tmpCal').value=''; document.getElementById('tmpProt').value=''; renderLogList(); openModal('mAddLog'); }
+function openAddLog(){
+  bulkQtyMap={};
+  document.getElementById('logSearch').value='';
+  document.getElementById('tmpName').value='';
+  document.getElementById('tmpCal').value='';
+  document.getElementById('tmpProt').value='';
+  renderLogList();
+  updateBulkSummary();
+  openModal('mAddLog');
+}
 function renderLogList(){
   const q=document.getElementById('logSearch').value.toLowerCase();
   const list=S.foods.filter(f=>f.name.toLowerCase().includes(q));
   const el=document.getElementById('logFoodList'); const noEl=document.getElementById('logNoFood');
-  if(!S.foods.length){el.innerHTML='';noEl.style.display='block';return;}
+  if(!S.foods.length){el.innerHTML='';noEl.style.display='block';updateBulkSummary();return;}
   noEl.style.display='none';
   el.innerHTML=list.length
-    ?list.map(f=>'<div class="fl-item" onclick="openQty(\''+f.id+'\')"><div class="fl-emoji">'+f.emoji+'</div><div class="fl-info"><div class="fl-name">'+f.name+'</div><div class="fl-mac">'+f.cal+' kcal ／ タンパク質 '+f.prot+'g</div></div><div class="fl-plus">+</div></div>').join('')
+    ?list.map(f=>{
+        const qty=bulkQtyMap[f.id]||0;
+        return '<div class="bulk-row">'
+          +'<div class="bulk-emoji">'+f.emoji+'</div>'
+          +'<div class="bulk-info"><div class="bulk-name">'+f.name+'</div><div class="bulk-mac">'+f.cal+' kcal ／ タンパク質 '+f.prot+'g</div></div>'
+          +'<div class="bulk-stepper">'
+          +'<button class="bulk-btn" onclick="changeBulkQty(\''+f.id+'\',-1)">－</button>'
+          +'<div class="bulk-qty" id="bulkQty-'+f.id+'">'+qty+'</div>'
+          +'<button class="bulk-btn" onclick="changeBulkQty(\''+f.id+'\',1)">＋</button>'
+          +'</div>'
+          +'</div>';
+      }).join('')
     :'<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">見つかりませんでした</div>';
+  updateBulkSummary();
+}
+function changeBulkQty(fid,delta){
+  const next=Math.max(0,(bulkQtyMap[fid]||0)+delta);
+  if(next===0) delete bulkQtyMap[fid]; else bulkQtyMap[fid]=next;
+  const q=document.getElementById('bulkQty-'+fid);
+  if(q) q.textContent=bulkQtyMap[fid]||0;
+  updateBulkSummary();
+}
+function updateBulkSummary(){
+  let count=0, cal=0, prot=0;
+  Object.entries(bulkQtyMap).forEach(([fid,qty])=>{
+    const f=S.foods.find(x=>x.id===fid);
+    if(!f||!qty)return;
+    count+=qty; cal+=f.cal*qty; prot+=f.prot*qty;
+  });
+  document.getElementById('bulkCount').textContent=count;
+  document.getElementById('bulkCal').textContent=Math.round(cal*10)/10;
+  document.getElementById('bulkProt').textContent=(Math.round(prot*10)/10)+'g';
+  document.getElementById('bulkAddBtn').disabled=count===0;
+}
+function confirmBulkLog(){
+  const entries=Object.entries(bulkQtyMap).filter(([_,qty])=>qty>0);
+  if(!entries.length) return;
+  const now=new Date(); const time=now.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+  if(!S.logs[S.date])S.logs[S.date]=[];
+  entries.forEach(([fid,qty])=>{ S.logs[S.date].push({id:uid(),fid,qty,time}); });
+  bulkQtyMap={};
+  closeModal('mAddLog');
+  renderLog();renderChart();save();showToast('まとめて記録しました ✓');
 }
 
 // Qty
