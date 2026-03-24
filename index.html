@@ -558,6 +558,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
       <div class="sheet-field"><div class="sheet-label">タンパク質 (g)</div>
         <input class="sheet-input" id="fProt" type="number" inputmode="decimal" placeholder="0"></div>
     </div>
+    <div class="sheet-field">
+      <div class="sheet-label">分類</div>
+      <div style="display:flex;gap:8px;">
+        <button type="button" id="catFoodBtn" class="act-btn green" style="flex:1;justify-content:center;height:40px;" onclick="pickFoodCategory('food')">食品</button>
+        <button type="button" id="catAlcoholBtn" class="act-btn" style="flex:1;justify-content:center;height:40px;" onclick="pickFoodCategory('alcohol')">お酒</button>
+      </div>
+    </div>
     <div style="font-size:11px;color:var(--text2);line-height:1.8;margin:10px 0 6px;padding:10px 12px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border);">
       💡 登録後は「記録タブの＋」か「食品リストの＋記録」から記録できます
     </div>
@@ -632,6 +639,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 let S = { date: todayStr(), logs:{}, foods:[], goals:{cal:2200,prot:130}, dayTypes:{}, weights:{}, weightHistory:{}, deficit:{target:28800,burnTrain:2700,burnOff:2400} };
 const EMOJIS = ['🍚','🍗','🥩','🐟','🥛','🥚','🥦','🥕','🍌','🍎','🍞','🧀','🥜','🍜','🥗','🍱','🍙','🥙','🌮','🍳','☕','🧃','🥤','🍫','🍪','🫘','🦐','🥑','🫐','💪','🌾','🍡'];
 let selEmoji='🍚', pendingFood=null, pendingQty=1;
+let selectedFoodCategory='food';
 let storageAvailable=true;
 let bulkQtyMap={};
 let alcoholFoodExpanded=false;
@@ -687,6 +695,35 @@ function sortFoodsByUsage(list){
     if(diff!==0) return diff;
     return a.name.localeCompare(b.name,'ja');
   });
+}
+function ensureAlcoholDefaults(){
+  if(!Array.isArray(S.foods)) S.foods = [];
+  const alcoholDefaults = [
+    {name:'生ビール（中ジョッキ）',emoji:'🍺',cal:200,prot:0,category:'alcohol'},
+    {name:'ハイボール(ジョッキ)',emoji:'🥃',cal:100,prot:0,category:'alcohol'},
+    {name:'ストロングゼロ500ml',emoji:'🥫',cal:270,prot:0,category:'alcohol'},
+    {name:'ストロングゼロ350ml',emoji:'🥫',cal:189,prot:0,category:'alcohol'},
+    {name:'角ハイボール 500ml',emoji:'🥃',cal:240,prot:0,category:'alcohol'},
+    {name:'角ハイボール 350ml',emoji:'🥃',cal:168,prot:0,category:'alcohol'},
+    {name:'キリン一番搾り 糖質ゼロ 500ml',emoji:'🍺',cal:145,prot:0,category:'alcohol'},
+    {name:'キリン一番搾り 糖質ゼロ 350ml',emoji:'🍺',cal:101,prot:0,category:'alcohol'}
+  ];
+  const existingNames = new Set(S.foods.map(f => (f.name || '').trim()));
+  let added = 0;
+  alcoholDefaults.forEach(item => {
+    if(!existingNames.has(item.name)){
+      S.foods.push({ id: uid(), ...item });
+      added += 1;
+    }
+  });
+  S.foods = S.foods.map(food => {
+    if(isAlcoholFood(food) && food.category !== 'alcohol') return { ...food, category:'alcohol' };
+    if(!food.category) return { ...food, category: isAlcoholFood(food) ? 'alcohol' : 'food' };
+    return food;
+  });
+  if(added > 0){
+    save();
+  }
 }
 
 // Date
@@ -1261,10 +1298,24 @@ function quickLog(fid){ switchPage('log'); setTimeout(()=>openQty(fid),100); }
 function delFood(id){ if(!confirm('この食品を削除しますか？'))return; S.foods=S.foods.filter(f=>f.id!==id); renderFoods();save();showToast('削除しました'); }
 
 // Add Food
-function openAddFood(){ document.getElementById('fName').value=''; document.getElementById('fCal').value=''; document.getElementById('fProt').value=''; selEmoji='🍚';renderEmojiGrid(); openModal('mAddFood'); setTimeout(()=>document.getElementById('fName').focus(),350); }
+function openAddFood(){ document.getElementById('fName').value=''; document.getElementById('fCal').value=''; document.getElementById('fProt').value=''; selEmoji='🍚'; selectedFoodCategory='food'; renderEmojiGrid(); updateFoodCategoryButtons(); openModal('mAddFood'); setTimeout(()=>document.getElementById('fName').focus(),350); }
 function renderEmojiGrid(){ document.getElementById('emojiGrid').innerHTML=EMOJIS.map(e=>'<div class="e-opt'+(e===selEmoji?' sel':'')+'" onclick="pickEmoji(\''+e+'\')">'+e+'</div>').join(''); }
 function pickEmoji(e){ selEmoji=e;renderEmojiGrid(); }
-function saveFood(){ const name=document.getElementById('fName').value.trim(); const cal=parseFloat(document.getElementById('fCal').value)||0; const prot=parseFloat(document.getElementById('fProt').value)||0; if(!name){document.getElementById('fName').focus();return;} const category=isAlcoholFood({name}) ? 'alcohol' : 'food'; S.foods.push({id:uid(),name,emoji:selEmoji,cal,prot,category}); closeModal('mAddFood');renderFoods();save();showToast('登録しました ✓'); }
+function pickFoodCategory(category){ selectedFoodCategory=category; updateFoodCategoryButtons(); }
+function updateFoodCategoryButtons(){
+  const foodBtn=document.getElementById('catFoodBtn');
+  const alcoholBtn=document.getElementById('catAlcoholBtn');
+  if(!foodBtn || !alcoholBtn) return;
+  const apply=(btn,active,isAlcohol=false)=>{
+    btn.classList.toggle('green', active && !isAlcohol);
+    btn.style.borderColor = active ? (isAlcohol ? 'rgba(251,146,60,.45)' : 'rgba(168,255,110,.3)') : 'var(--border2)';
+    btn.style.background = active ? (isAlcohol ? 'rgba(251,146,60,.12)' : 'rgba(168,255,110,.06)') : 'var(--surface)';
+    btn.style.color = active ? (isAlcohol ? '#fdba74' : 'var(--green)') : 'var(--text3)';
+  };
+  apply(foodBtn, selectedFoodCategory==='food', false);
+  apply(alcoholBtn, selectedFoodCategory==='alcohol', true);
+}
+function saveFood(){ const name=document.getElementById('fName').value.trim(); const cal=parseFloat(document.getElementById('fCal').value)||0; const prot=parseFloat(document.getElementById('fProt').value)||0; if(!name){document.getElementById('fName').focus();return;} const category=selectedFoodCategory || (isAlcoholFood({name}) ? 'alcohol' : 'food'); S.foods.push({id:uid(),name,emoji:selEmoji,cal,prot,category}); closeModal('mAddFood');renderFoods();save();showToast('登録しました ✓'); }
 
 // Goals
 function renderGoals(){ document.getElementById('goalCalIn').value=S.goals.cal||''; document.getElementById('goalProtIn').value=S.goals.prot||''; document.getElementById('goalDeficit').value=(S.deficit&&S.deficit.target)||28800; document.getElementById('goalBurnTrain').value=(S.deficit&&S.deficit.burnTrain)||2700; document.getElementById('goalBurnOff').value=(S.deficit&&S.deficit.burnOff)||2400; renderDeficitGoalsPage(); }
@@ -1308,7 +1359,7 @@ function switchPage(name){ document.querySelectorAll('.page').forEach(p=>p.class
 function addDefaults(){ if(S.foods.length)return; [{name:'完全栄養食',emoji:'🍫',cal:400,prot:30,category:'food'},{name:'ゆで卵',emoji:'🥚',cal:75,prot:7,category:'food'},{name:'プロテイン',emoji:'💪',cal:110,prot:21,category:'food'},{name:'あんぱん',emoji:'🍞',cal:185,prot:4.7,category:'food'},{name:'ドデカミン',emoji:'🥤',cal:78,prot:0,category:'food'},{name:'牛丼 小盛',emoji:'🍚',cal:507,prot:13.1,category:'food'},{name:'牛丼 並盛',emoji:'🍚',cal:687,prot:17.1,category:'food'},{name:'完全栄養食(ブラックエディション)',emoji:'🍫',cal:400,prot:40,category:'food'},{name:'羊羹(ファミマ)',emoji:'🍡',cal:166,prot:2,category:'food'},{name:'オートミール',emoji:'🌾',cal:144,prot:3.5,category:'food'},{name:'春雨スープ',emoji:'🍜',cal:40,prot:1,category:'food'},{name:'生ビール（中ジョッキ）',emoji:'🍺',cal:200,prot:0,category:'alcohol'},{name:'ハイボール(ジョッキ)',emoji:'🥃',cal:100,prot:0,category:'alcohol'},{name:'ストロングゼロ500ml',emoji:'🥫',cal:270,prot:0,category:'alcohol'},{name:'ストロングゼロ350ml',emoji:'🥫',cal:189,prot:0,category:'alcohol'},{name:'角ハイボール 500ml',emoji:'🥃',cal:240,prot:0,category:'alcohol'},{name:'角ハイボール 350ml',emoji:'🥃',cal:168,prot:0,category:'alcohol'},{name:'キリン一番搾り 糖質ゼロ 500ml',emoji:'🍺',cal:145,prot:0,category:'alcohol'},{name:'キリン一番搾り 糖質ゼロ 350ml',emoji:'🍺',cal:101,prot:0,category:'alcohol'}].forEach(d=>S.foods.push({id:uid(),...d})); }
 
 // Init
-load(); addDefaults();
+load(); addDefaults(); ensureAlcoholDefaults();
 renderDate(); renderLog(); renderWeightPage(); renderGoals(); renderFoods();
 </script>
 </body>
