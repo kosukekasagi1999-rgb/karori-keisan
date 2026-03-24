@@ -8,6 +8,10 @@
 <meta name="apple-mobile-web-app-title" content="カロリー記録">
 <meta name="theme-color" content="#0d0f14">
 <title>NutriLog</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg:#141720;--bg2:#1a1e2a;--surface:#222638;
@@ -15,10 +19,13 @@
   --green:#a8ff6e;--green-dim:#4a7a2a;--teal:#5eead4;--orange:#fb923c;
   --text:#e8edf5;--text2:#8b92a8;--text3:#adb5c8;--danger:#f87171;
   --radius:16px;--radius-sm:10px;--font:-apple-system,BlinkMacSystemFont,'Helvetica Neue','Hiragino Sans','Yu Gothic','Meiryo',sans-serif;
+  --radius:16px;--radius-sm:10px;--font:'Outfit','Noto Sans JP',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overscroll-behavior:none;}
 html,body{min-height:100%;}
 body{background:var(--bg);color:var(--text);font-family:var(--font);
+  min-height:100svh;padding-bottom:calc(72px + env(safe-area-inset-bottom));
   min-height:100svh;padding-bottom:calc(110px + env(safe-area-inset-bottom));
   overflow-y:auto;-webkit-overflow-scrolling:touch;
   -webkit-font-smoothing:antialiased;}
@@ -39,7 +46,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 .date-pill{flex:1;text-align:center;background:var(--surface);border:1px solid var(--border2);
   border-radius:10px;padding:7px 12px;font-size:14px;font-weight:500;cursor:pointer;}
 
-.page{display:none;padding:0 0 32px;overflow:visible;}
+.page{display:none;padding:0 0 16px;}
+.page{display:none;padding:0 0 32px;min-height:calc(100svh - 110px);overflow:visible;}
 .page.active{display:block;}
 
 /* SUMMARY */
@@ -56,27 +64,23 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .ring-num{font-size:15px;font-weight:700;color:var(--green);line-height:1;}
 .ring-label{font-size:9px;color:var(--text2);letter-spacing:.06em;margin-top:1px;}
-.summary-right{flex:1;min-width:0;}
-.macro-block{margin-bottom:10px;}
+.summary-right{flex:1;}
+.macro-block{margin-bottom:7px;}
 .macro-block:last-child{margin-bottom:0;}
 .macro-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}
 .macro-name{font-size:12px;color:var(--text2);}
 .macro-val{font-size:13px;font-weight:600;}
 .macro-val.cal{color:var(--green);}
 .macro-val.prot{color:var(--teal);}
-.bar-wrap{position:relative;padding-top:24px;}
 .bar{height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:visible;position:relative;}
 .bar-fill{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1);}
 .bar-fill.cal{background:linear-gradient(90deg,var(--green-dim),var(--green));}
 .bar-fill.prot{background:linear-gradient(90deg,#0d9488,var(--teal));}
 .goal-sub{font-size:10px;color:var(--text2);margin-top:3px;}
-.bar-marker{position:absolute;top:0;width:2px;height:28px;display:none;pointer-events:none;transform:translateX(-50%);z-index:2;}
-.bar-marker-line{position:absolute;left:0;top:15px;bottom:0;width:2px;border-radius:2px;}
-.bar-marker-tag{position:absolute;top:0;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:9px;font-weight:700;line-height:1;padding:3px 6px;border-radius:999px;background:rgba(20,23,32,.96);border:1px solid currentColor;box-shadow:0 2px 8px rgba(0,0,0,.25);max-width:80px;overflow:hidden;text-overflow:ellipsis;}
-.bar-marker.edge-left .bar-marker-tag{left:0;transform:none;}
-.bar-marker.edge-right .bar-marker-tag{left:auto;right:0;transform:none;}
 
 /* MODE CARD */
+.mode-card{margin:0 16px;background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--radius);padding:13px 14px;}
 .card-label{font-size:11px;color:var(--text2);font-weight:600;letter-spacing:.08em;
   text-transform:uppercase;margin-bottom:7px;}
 .mode-btns{display:flex;gap:8px;}
@@ -88,6 +92,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 .today-def-lbl{text-align:center;font-size:11px;margin-top:9px;}
 
 /* DEFICIT CARD */
+.deficit-card{margin:0 16px;background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--radius);padding:10px 12px;}
 .def-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px;}
 .def-title{font-size:11px;color:var(--text2);font-weight:600;letter-spacing:.08em;text-transform:uppercase;}
 .def-pct{font-size:11px;color:var(--green);font-weight:700;}
@@ -100,6 +106,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 .def-eta{font-size:11px;color:var(--text2);margin-top:4px;}
 
 /* WEIGHT CARD */
+.weight-card{margin:0 16px;background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--radius);padding:13px 16px;display:flex;align-items:center;gap:10px;}
 .weight-input{flex:1;background:transparent;border:none;color:var(--text);
   font-size:20px;font-weight:600;font-family:var(--font);outline:none;text-align:right;min-width:0;}
 .weight-input::placeholder{color:var(--text2);}
@@ -112,6 +120,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 .fab:active{transform:scale(.93);}
 
 /* LOG */
+.log-list{padding:0 16px;display:flex;flex-direction:column;gap:8px;}
 .log-list{padding:0 16px 24px;display:flex;flex-direction:column;gap:8px;}
 .log-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
   padding:13px 14px;display:flex;align-items:center;gap:12px;animation:fadeUp .2s ease both;}
@@ -147,9 +156,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
   display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
 .banner-title{font-size:15px;font-weight:700;color:var(--green);}
 .banner-sub{font-size:12px;color:var(--text2);margin-top:3px;line-height:1.5;}
+.food-list{padding:0 16px;display:flex;flex-direction:column;gap:8px;}
 .food-list{padding:0 16px 28px;display:flex;flex-direction:column;gap:8px;}
-.food-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-  padding:13px 14px;display:flex;align-items:center;gap:12px;}
+.food-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 14px;display:flex;align-items:center;gap:12px;}
+.food-stack{display:flex;flex-direction:column;gap:8px;}
+.group-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.group-head{display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;}
+.group-sub{font-size:11px;color:var(--text2);margin-top:2px;}
+.group-children{padding:0 10px 10px;display:flex;flex-direction:column;gap:8px;}
+.group-children .food-item,.group-children .bulk-row{border-radius:12px;background:rgba(255,255,255,.02);}
 .food-emoji{font-size:24px;width:38px;text-align:center;flex-shrink:0;}
 .food-info{flex:1;min-width:0;}
 .food-name{font-size:14px;font-weight:500;}
@@ -189,6 +204,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
   cursor:pointer;padding:4px 0;transition:color .15s;font-family:var(--font);}
 .nav-btn.active{color:var(--green);}
 .nav-ico{font-size:22px;line-height:1;}
+
 
 /* DATE STATE */
 .date-state{margin:0 16px 8px;padding:10px 12px;border-radius:12px;border:1px solid rgba(94,234,212,.22);
@@ -254,6 +270,18 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
   display:flex;align-items:center;justify-content:center;}
 .qty-num{font-size:40px;font-weight:700;min-width:60px;text-align:center;}
 .qty-preview{text-align:center;color:var(--text2);font-size:13px;margin-bottom:16px;}
+.fl-item{display:flex;align-items:center;gap:12px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;
+  cursor:pointer;margin-bottom:8px;transition:border-color .1s;}
+.fl-item:active{border-color:var(--green);}
+.fl-emoji{font-size:22px;width:34px;text-align:center;flex-shrink:0;}
+.fl-info{flex:1;min-width:0;}
+.fl-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fl-mac{font-size:11px;color:var(--text2);margin-top:1px;}
+.fl-plus{width:30px;height:30px;border-radius:9px;flex-shrink:0;
+  background:rgba(168,255,110,.1);border:1px solid rgba(168,255,110,.3);
+  color:var(--green);font-size:18px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;}
 .toast{position:fixed;top:calc(80px + env(safe-area-inset-top));left:50%;
   transform:translateX(-50%) translateY(-8px);background:var(--green);color:#0d0f14;
   padding:9px 20px;border-radius:20px;font-size:13px;font-weight:700;
@@ -262,6 +290,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 
 /* カード間スペース */
 .stack{display:flex;flex-direction:column;gap:6px;margin:6px 0;}
+
 </style>
 </head>
 <body>
@@ -278,8 +307,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
   </div>
 </div>
 
+
 <div id="storageBanner" style="margin:10px 16px 0;padding:10px 12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);border-radius:12px;color:#fca5a5;font-size:12px;line-height:1.7;display:none;">
-  この開き方では自動保存が不安定です。右下の「目標」→「JSONを書き出し」でバックアップしてください。
+  この開き方では自動保存が不安定です。右下の「目標」→「JSONで書き出し」でバックアップしてください。
 </div>
 
 <!-- PAGE: 記録 -->
@@ -302,17 +332,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
             <span class="macro-name">カロリー</span>
             <span class="macro-val cal" id="sumCal">0 kcal</span>
           </div>
-          <div class="bar-wrap">
-            <div class="bar">
-              <div class="bar-fill cal" id="barCal" style="width:0%"></div>
-              <div id="markerGoalCal" class="bar-marker">
-                <div class="bar-marker-tag" style="color:rgba(168,255,110,0.95)" id="markerGoalTop">目標 2200</div>
-                <div class="bar-marker-line" style="background:rgba(168,255,110,0.85)"></div>
-              </div>
-              <div id="markerBurnCal" class="bar-marker">
-                <div class="bar-marker-tag" style="color:rgba(251,146,60,0.95)" id="markerBurnTop">オフ 2400</div>
-                <div class="bar-marker-line" style="background:rgba(251,146,60,0.85)"></div>
-              </div>
+          <div class="bar" style="position:relative">
+            <div class="bar-fill cal" id="barCal" style="width:0%"></div>
+            <div id="markerGoalCal" style="position:absolute;top:-14px;bottom:-16px;width:2px;background:rgba(168,255,110,0.85);display:none;pointer-events:none;transform:translateX(-50%)">
+              <div style="position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:8px;font-weight:700;color:rgba(168,255,110,0.9);letter-spacing:.03em" id="markerGoalLbl"></div>
+              <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:8px;font-weight:700;color:rgba(168,255,110,0.9)" id="markerGoalTop">目標</div>
+            </div>
+            <div id="markerBurnCal" style="position:absolute;top:-14px;bottom:-16px;width:2px;background:rgba(251,146,60,0.85);display:none;pointer-events:none;transform:translateX(-50%)">
+              <div style="position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:8px;font-weight:700;color:rgba(251,146,60,0.9)" id="markerBurnLbl"></div>
+              <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:8px;font-weight:700;color:rgba(251,146,60,0.9)" id="markerBurnTop"></div>
             </div>
           </div>
           <div class="goal-sub" id="goalCalLbl"></div>
@@ -331,19 +359,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
   <div class="date-state" id="dateState"></div>
 
   <div class="stack" style="padding:0 16px;margin:6px 0;">
+    <!-- モード選択 -->
     <div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:9px 12px;">
       <div class="card-label">今日のモード</div>
       <div class="mode-btns">
         <button id="btnTrain" class="mode-btn" onclick="setDayType('train')">
-          🏋️ 筋トレ<span id="trainBurnLbl">消費 2700 kcal</span>
+          🏋️ 筋トレ<span>消費 2700 kcal</span>
         </button>
         <button id="btnOff" class="mode-btn" onclick="setDayType('off')">
-          😴 オフ<span id="offBurnLbl">消費 2400 kcal</span>
+          😴 オフ<span>消費 2400 kcal</span>
         </button>
       </div>
       <div class="today-def-lbl" id="todayDefLbl"></div>
     </div>
 
+    <!-- 累積赤字 -->
     <div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:14px;">
       <div class="def-header">
         <span class="def-title">🔥 カットできたカロリー</span>
@@ -357,14 +387,16 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
       <div class="def-eta" id="defEta"></div>
     </div>
 
+    <!-- 体重 -->
     <div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:9px 14px;display:flex;align-items:center;gap:10px;">
       <span style="font-size:22px">⚖️</span>
       <span style="font-size:13px;color:var(--text2);flex-shrink:0">体重</span>
-      <input id="weightInput" class="weight-input" type="number" inputmode="decimal" step="0.1" placeholder="--" onchange="saveWeight()" oninput="saveWeight()">
+      <input id="weightInput" class="weight-input" type="number" inputmode="decimal" step="0.1" placeholder="-- " onchange="saveWeight()">
       <span style="font-size:13px;color:var(--text2);flex-shrink:0">kg</span>
     </div>
   </div>
 
+  <!-- 直近7日間棒グラフ -->
   <div style="margin:0 16px 0;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:10px 12px 6px;">
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
       <span style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:.08em;text-transform:uppercase">📊 直近7日間の摂取カロリー</span>
@@ -381,7 +413,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
     </div>
   </div>
 
-  <div class="log-hint" id="logHint" onclick="switchPage('foods')">
+    <div class="log-hint" id="logHint" onclick="switchPage('foods')">
     <span style="font-size:22px">💡</span>
     <div class="hint-text">まず「<b>食品タブ</b>」で食品を登録すると<br>ここに記録できます！</div>
     <span style="color:var(--teal);font-size:18px;margin-left:auto">›</span>
@@ -392,6 +424,49 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
     <button class="fab" onclick="openAddLog()">+</button>
   </div>
   <div class="log-list" id="logList"></div>
+</div>
+
+<!-- PAGE: 体重 -->
+<div class="page" id="page-weight">
+  <div style="height:16px"></div>
+  <div style="padding:0 16px;display:flex;flex-direction:column;gap:14px;">
+    <div class="goals-card" style="margin-bottom:0;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;">
+        <div class="card-title" style="margin-bottom:0;">体重の推移</div>
+        <div id="weightRangeLabel" style="font-size:11px;color:var(--text2);"></div>
+      </div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:14px;">
+        記録タブで入力した体重をもとに、全期間の推移を折れ線グラフで表示します。目標体重は73.0kgです。
+      </div>
+      <canvas id="weightChart" style="width:100%;display:block"></canvas>
+      <div id="weightChartEmpty" style="display:none;text-align:center;padding:24px 0 8px;color:var(--text2);font-size:13px;line-height:2;">
+        <div style="font-size:34px;opacity:.35;margin-bottom:8px;">⚖️</div>
+        体重データがまだありません<br>
+        記録タブで体重を入力すると表示されます
+      </div>
+    </div>
+    <div class="goals-card" style="margin-bottom:0;">
+      <div class="card-title">最新の体重サマリー</div>
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;">
+        <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:12px;">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:6px;">最新</div>
+          <div id="weightLatest" style="font-size:20px;font-weight:700;color:var(--text);">--</div>
+        </div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:12px;">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:6px;">開始</div>
+          <div id="weightStart" style="font-size:20px;font-weight:700;color:var(--text);">--</div>
+        </div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:12px;">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:6px;">変化</div>
+          <div id="weightDelta" style="font-size:20px;font-weight:700;color:var(--green);">--</div>
+        </div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:12px;">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:6px;">目標差</div>
+          <div id="weightGoalDiff" style="font-size:20px;font-weight:700;color:var(--text);">--</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- PAGE: 食品 -->
@@ -434,6 +509,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
         <input class="field-input" id="goalBurnOff" type="number" inputmode="numeric" placeholder="2400"></div>
       <button class="btn-save" onclick="saveGoals()">保存する</button>
 
+      <!-- 目標タブの進捗 -->
       <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
         <div style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">🔥 カットできたカロリーの進捗</div>
         <div style="height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;margin-bottom:10px">
@@ -448,13 +524,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
     </div>
     <div class="goals-card">
       <div class="card-title">データ管理</div>
-      <button class="btn-ghost" onclick="exportData()">📤 JSONを書き出し</button>
-      <button class="btn-ghost" onclick="triggerImport()">📥 JSONを読み込む</button>
+      <button class="btn-ghost" onclick="exportData()">📤  JSONで書き出し</button>
+      <button class="btn-ghost" onclick="triggerImport()">📥  JSONを読み込む</button>
       <input type="file" id="importJson" accept="application/json" style="display:none" onchange="importData(event)">
       <div style="font-size:11px;color:var(--text2);line-height:1.8;margin:10px 0 0;padding:10px 12px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border);">
         オフライン専用版です。自動保存はまず端末内に保存されます。iPhoneのローカルHTMLでは保存領域が不安定なことがあるため、念のため定期的にJSON書き出しもしておくと安全です。
       </div>
-      <button class="btn-danger" onclick="confirmClear()">🗑 全データを削除</button>
+      <button class="btn-danger" onclick="confirmClear()">🗑  全データを削除</button>
     </div>
   </div>
 </div>
@@ -462,6 +538,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 <!-- BOTTOM NAV -->
 <div class="bottom-nav">
   <button class="nav-btn active" id="nav-log" onclick="switchPage('log')"><span class="nav-ico">📋</span>記録</button>
+  <button class="nav-btn" id="nav-weight" onclick="switchPage('weight')"><span class="nav-ico">⚖️</span>体重</button>
   <button class="nav-btn" id="nav-foods" onclick="switchPage('foods')"><span class="nav-ico">🥗</span>食品</button>
   <button class="nav-btn" id="nav-goals" onclick="switchPage('goals')"><span class="nav-ico">🎯</span>目標</button>
 </div>
@@ -491,19 +568,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
   </div>
 </div>
 
+
 <!-- MODAL: 記録追加 -->
 <div class="overlay" id="mAddLog" onclick="overlayClose('mAddLog',event)">
   <div class="sheet">
     <div class="handle"></div>
     <div class="step-badge">STEP 1 — まとめて選ぶ</div>
     <div class="sheet-title">何を食べましたか？</div>
-    <input class="sheet-input" id="logSearch" placeholder="🔍 食品名で絞り込み…" oninput="renderLogList()" autocomplete="off" style="margin-bottom:14px">
+    <input class="sheet-input" id="logSearch" placeholder="🔍  食品名で絞り込み…" oninput="renderLogList()" autocomplete="off" style="margin-bottom:14px">
     <div id="logFoodList" style="max-height:42svh;overflow-y:auto;padding-bottom:4px"></div>
     <div id="logNoFood" style="display:none;text-align:center;padding:20px 0;color:var(--text2);font-size:13px;line-height:2.2">
       <div style="font-size:36px;margin-bottom:8px;opacity:.3">🥗</div>
       食品が登録されていません<br>
       <span style="color:var(--teal);cursor:pointer;font-weight:600" onclick="closeModal('mAddLog');switchPage('foods')">「食品タブ」で追加する →</span>
     </div>
+    <!-- 一時記録 -->
     <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
       <div style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">⚡ その場限りで記録（リスト登録なし）</div>
       <div style="display:flex;flex-direction:column;gap:8px">
@@ -526,202 +605,425 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
   </div>
 </div>
 
+
+<!-- MODAL: 数量 -->
+<div class="overlay" id="mQty" onclick="overlayClose('mQty',event)">
+  <div class="sheet">
+    <div class="handle"></div>
+    <div class="step-badge">STEP 2 — 量を選ぶ</div>
+    <div class="sheet-title" id="qtyTitle"></div>
+    <div class="qty-row">
+      <button class="qty-pm" onclick="changeQty(-1)">－</button>
+      <div class="qty-num" id="qtyNum">1</div>
+      <button class="qty-pm" onclick="changeQty(1)">＋</button>
+    </div>
+    <div class="qty-preview" id="qtyPreview"></div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" onclick="closeModal('mQty');setTimeout(()=>openAddLog(),100)">← 戻る</button>
+      <button class="btn-ok" onclick="confirmLog()">記録する ✓</button>
+    </div>
+  </div>
+</div>
+
 <input type="date" id="hiddenDate" style="position:fixed;opacity:0;pointer-events:none" onchange="onDatePicked()">
 <div class="toast" id="toast"></div>
 
 <script>
-let S = { date: todayStr(), logs:{}, foods:[], goals:{cal:2200,prot:130}, dayTypes:{}, weights:{}, deficit:{target:28800,burnTrain:2700,burnOff:2400} };
+let S = { date: todayStr(), logs:{}, foods:[], goals:{cal:2200,prot:130}, dayTypes:{}, weights:{}, weightHistory:{}, deficit:{target:28800,burnTrain:2700,burnOff:2400} };
 const EMOJIS = ['🍚','🍗','🥩','🐟','🥛','🥚','🥦','🥕','🍌','🍎','🍞','🧀','🥜','🍜','🥗','🍱','🍙','🥙','🌮','🍳','☕','🧃','🥤','🍫','🍪','🫘','🦐','🥑','🫐','💪','🌾','🍡'];
-const STORE_KEY='nlog3';
-let selEmoji='🍚', pendingFood=null, pendingQty=1, bulkQtyMap={};
+let selEmoji='🍚', pendingFood=null, pendingQty=1;
 let storageAvailable=true;
+let bulkQtyMap={};
+let alcoholFoodExpanded=false;
+let alcoholLogExpanded=false;
 
-function pad2(n){ return String(n).padStart(2,'0'); }
-function todayStr(){
-  const d = new Date();
-  return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+const STORE_KEY='nlog3';
+function save(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); storageAvailable=true; }
+  catch(e){ storageAvailable=false; updateStorageBanner(); }
 }
-function parseDateStr(s){
-  const [y,m,d] = s.split('-').map(Number);
-  return new Date(y, (m||1)-1, d||1);
+function load(){
+  try{ const d=localStorage.getItem(STORE_KEY); if(d) S={...S,...JSON.parse(d)}; storageAvailable=true; }
+  catch(e){ storageAvailable=false; }
+  updateStorageBanner();
 }
-function fmtDate(s){
-  return parseDateStr(s).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
-}
-function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
-function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
-
 function updateStorageBanner(){
   const el=document.getElementById('storageBanner');
   if(!el) return;
-  el.style.display = storageAvailable ? 'none' : 'block';
+  el.style.display=storageAvailable ? 'none' : 'block';
 }
-function save(){
-  try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); storageAvailable=true; }
-  catch(e){ storageAvailable=false; }
-  updateStorageBanner();
+function todayStr(){
+  const d=new Date();
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
 }
-function load(){
-  try{ const d=localStorage.getItem(STORE_KEY); if(d) S={...S, ...JSON.parse(d)}; storageAvailable=true; }
-  catch(e){ storageAvailable=false; }
-  updateStorageBanner();
+function parseLocalDate(s){
+  const [y,m,d]=s.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function formatLocalDate(d){
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function fmtDate(s){ const d=parseLocalDate(s); return d.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'}); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
+function isAlcoholFood(food){
+  const category=(food.category||'').toLowerCase();
+  if(category==='alcohol') return true;
+  const name=(food.name||'');
+  return ['ビール','ハイボール','レモンサワー','サワー','酎ハイ','焼酎','日本酒','ワイン','梅酒','ウイスキー','カクテル','シャンパン','紹興酒','マッコリ','ジン','ラム','テキーラ','ブランデー','酒'].some(k=>name.includes(k));
+}
+function getFoodUseCount(fid){
+  return Object.values(S.logs||{}).reduce((sum, logs)=> sum + (logs||[]).filter(l=>l.fid===fid).reduce((a,l)=>a+(Number(l.qty)||1),0), 0);
+}
+function sortFoodsByUsage(list){
+  return [...list].sort((a,b)=>{
+    const diff=getFoodUseCount(b.id)-getFoodUseCount(a.id);
+    if(diff!==0) return diff;
+    return a.name.localeCompare(b.name,'ja');
+  });
 }
 
+// Date
 function renderDate(){
-  document.getElementById('datePill').textContent = fmtDate(S.date);
-  const ds = document.getElementById('dateState');
-  if(S.date !== todayStr()){
-    ds.textContent = '編集中: ' + fmtDate(S.date);
+  document.getElementById('datePill').textContent=fmtDate(S.date);
+  const ds=document.getElementById('dateState');
+  if(!ds) return;
+  if(S.date!==todayStr()){
+    ds.textContent='この日付に記録を追加します: '+fmtDate(S.date);
     ds.classList.add('show');
-  } else {
-    ds.textContent = '';
+  }else{
     ds.classList.remove('show');
   }
 }
-function changeDate(delta){
-  const d=parseDateStr(S.date);
-  d.setDate(d.getDate()+delta);
-  S.date = d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
-  renderDate(); renderLog(); save();
+function changeDate(diff){
+  const dt=parseLocalDate(S.date);
+  dt.setDate(dt.getDate()+diff);
+  S.date=formatLocalDate(dt);
+  renderDate();renderLog();save();
 }
-function goToday(){ S.date=todayStr(); renderDate(); renderLog(); save(); }
+function goToday(){ S.date=todayStr(); renderDate();renderLog();save(); }
 function openDatePicker(){ const e=document.getElementById('hiddenDate'); e.value=S.date; e.click(); }
-function onDatePicked(){ const v=document.getElementById('hiddenDate').value; if(v){ S.date=v; renderDate(); renderLog(); save(); } }
+function onDatePicked(){ const v=document.getElementById('hiddenDate').value; if(v){S.date=v;renderDate();renderLog();save();} }
 
-function getTotals(date=S.date){
-  const logs=S.logs[date]||[]; let cal=0, prot=0;
+// Totals
+function getTotals(){
+  const logs=S.logs[S.date]||[]; let cal=0,prot=0;
   logs.forEach(l=>{
-    if(l.tmpName){ cal += Number(l.tmpCal)||0; prot += Number(l.tmpProt)||0; return; }
-    const f=S.foods.find(x=>x.id===l.fid);
-    if(f){ cal += (Number(f.cal)||0) * (Number(l.qty)||0); prot += (Number(f.prot)||0) * (Number(l.qty)||0); }
+    if(l.tmpName){cal+=l.tmpCal;prot+=l.tmpProt;return;}
+    const f=S.foods.find(f=>f.id===l.fid); if(f){cal+=f.cal*l.qty;prot+=f.prot*l.qty;}
   });
-  return { cal: Math.round(cal*10)/10, prot: Math.round(prot*10)/10 };
+  return {cal:Math.round(cal*10)/10, prot:Math.round(prot*10)/10};
 }
 
-function setMarkerPosition(el, pct){
-  if(!el) return;
-  el.classList.remove('edge-left','edge-right');
-  const clamped = Math.max(2, Math.min(98, pct));
-  el.style.left = clamped + '%';
-  if(clamped < 12) el.classList.add('edge-left');
-  if(clamped > 88) el.classList.add('edge-right');
-  el.style.display='block';
-}
-
-function renderSummary(){
-  const {cal, prot} = getTotals();
-  const gc = S.goals.cal || 2200;
-  const gp = S.goals.prot || 130;
-  const cp = Math.min(100, (cal / Math.max(gc,1)) * 100);
-  const pp = Math.min(100, (prot / Math.max(gp,1)) * 100);
-
-  document.getElementById('ringNum').textContent = cal;
-  document.getElementById('sumCal').textContent = cal + ' kcal';
-  document.getElementById('sumProt').textContent = prot + 'g';
-  document.getElementById('barProt').style.width = pp + '%';
-  document.getElementById('goalCalLbl').textContent = '目標 ' + gc + ' kcal（' + Math.round(cp) + '%達成）';
-  document.getElementById('goalProtLbl').textContent = '目標 ' + gp + 'g（' + Math.round(pp) + '%達成）';
-  document.getElementById('ringCal').style.strokeDashoffset = 182.2 - (cp/100)*182.2;
-
-  const calBarEl = document.getElementById('barCal');
-  if(calBarEl && cal > gc){
-    calBarEl.style.background='linear-gradient(90deg,#4a7a2a,#a8ff6e,#f87171)';
-  } else if(calBarEl){
-    calBarEl.style.background='';
+// Summary
+function setMarkerPosition(markerEl,labelEl,pct,maxSide='center'){
+  if(!markerEl || !labelEl) return;
+  const clamped=Math.max(2, Math.min(98, pct));
+  markerEl.style.left=clamped+'%';
+  markerEl.style.display='block';
+  labelEl.style.left='50%';
+  labelEl.style.right='auto';
+  labelEl.style.transform='translateX(-50%)';
+  if(clamped < 14){
+    labelEl.style.left='0';
+    labelEl.style.transform='none';
+  }else if(clamped > 86){
+    labelEl.style.left='auto';
+    labelEl.style.right='0';
+    labelEl.style.transform='none';
   }
+}
+function renderSummary(){
+  const {cal,prot}=getTotals();
+  const gc=S.goals.cal||2200, gp=S.goals.prot||130;
+  const cp=Math.min(100,(cal/gc)*100), pp=Math.min(100,(prot/gp)*100);
+  document.getElementById('ringNum').textContent=cal;
+  document.getElementById('sumCal').textContent=cal+' kcal';
+  document.getElementById('sumProt').textContent=prot+'g';
+  const calBarEl=document.getElementById('barCal');
+  if(calBarEl&&cal>gc){calBarEl.style.background='linear-gradient(90deg,#4a7a2a,#a8ff6e,#f87171)';}
+  else if(calBarEl){calBarEl.style.background='';}
+  document.getElementById('barProt').style.width=pp+'%';
+  document.getElementById('goalCalLbl').textContent='目標 '+gc+' kcal（'+Math.round(cp)+'%達成）';
+  document.getElementById('goalProtLbl').textContent='目標 '+gp+'g（'+Math.round(pp)+'%達成）';
+  document.getElementById('ringCal').style.strokeDashoffset=182.2-(cp/100)*182.2;
 
-  const burn = getBurn(S.date);
-  const maxCal = Math.max(gc, burn || gc, cal, 1);
-  calBarEl.style.width = Math.min(100, (cal/maxCal)*100) + '%';
+  const burn=getBurn(S.date);
+  const maxCal=Math.max(gc, burn||gc, cal, 1);
+  document.getElementById('barCal').style.width=Math.min(100,(cal/maxCal)*100)+'%';
 
   const mGoal=document.getElementById('markerGoalCal');
-  setMarkerPosition(mGoal, (gc/maxCal)*100);
-  document.getElementById('markerGoalTop').textContent = '目標 ' + gc.toLocaleString();
+  const goalTop=document.getElementById('markerGoalTop');
+  const goalLbl=document.getElementById('markerGoalLbl');
+  if(mGoal){
+    const pct=(gc/maxCal)*100;
+    if(goalTop) goalTop.textContent='目標';
+    if(goalLbl) goalLbl.textContent=gc.toLocaleString();
+    setMarkerPosition(mGoal, goalTop, pct);
+    if(goalLbl) setMarkerPosition(mGoal, goalLbl, pct);
+  }
 
   const mBurn=document.getElementById('markerBurnCal');
-  if(burn){
-    setMarkerPosition(mBurn, (burn/maxCal)*100);
-    const dayType=(S.dayTypes||{})[S.date];
-    document.getElementById('markerBurnTop').textContent = (dayType==='train'?'筋トレ':'オフ') + ' ' + burn.toLocaleString();
-  } else {
-    mBurn.style.display='none';
+  const burnTop=document.getElementById('markerBurnTop');
+  const burnLbl=document.getElementById('markerBurnLbl');
+  if(mBurn){
+    if(burn){
+      const pct=(burn/maxCal)*100;
+      const dayType=(S.dayTypes||{})[S.date];
+      if(burnTop) burnTop.textContent=dayType==='train'?'筋トレ':'オフ';
+      if(burnLbl) burnLbl.textContent=burn.toLocaleString();
+      setMarkerPosition(mBurn, burnTop, pct);
+      if(burnLbl) setMarkerPosition(mBurn, burnLbl, pct);
+    } else {
+      mBurn.style.display='none';
+    }
   }
 }
 
-function getBurn(date){
-  const t=(S.dayTypes||{})[date];
-  if(!t) return null;
-  return t==='train' ? (S.deficit.burnTrain||2700) : (S.deficit.burnOff||2400);
-}
+// Deficit
+function getBurn(date){ const t=(S.dayTypes||{})[date]; if(!t)return null; return t==='train'?(S.deficit.burnTrain||2700):(S.deficit.burnOff||2400); }
 function calcTotalDeficit(){
   let total=0;
   Object.keys(S.dayTypes||{}).forEach(date=>{
-    const burn=getBurn(date); if(burn===null) return;
-    total += burn - getTotals(date).cal;
+    const burn=getBurn(date); if(burn===null)return;
+    const logs=S.logs[date]||[];
+    if(logs.length===0) return;
+    let cal=0;
+    logs.forEach(l=>{ if(l.tmpName){cal+=l.tmpCal;return;} const f=S.foods.find(f=>f.id===l.fid); if(f)cal+=f.cal*l.qty; });
+    total+=(burn-cal);
   });
   return Math.round(total);
 }
 function setDayType(type){
-  if(!S.dayTypes) S.dayTypes = {};
-
-  const current = S.dayTypes[S.date];
-
-  if(current === type){
-    delete S.dayTypes[S.date];
-  } else {
-    S.dayTypes[S.date] = type;
-  }
-
-  save();
-  renderDayMode();
-  renderSummary();
-  renderDeficit();
+  if(!S.dayTypes)S.dayTypes={};
+  const current=S.dayTypes[S.date];
+  if(current===type) delete S.dayTypes[S.date];
+  else S.dayTypes[S.date]=type;
+  save();renderDayMode();renderSummary();renderDeficit();
 }
 function renderDayMode(){
   const type=(S.dayTypes||{})[S.date];
   const btnT=document.getElementById('btnTrain'), btnO=document.getElementById('btnOff');
-  btnT.classList.toggle('active', type==='train');
-  btnO.classList.toggle('active', type==='off');
-  document.getElementById('trainBurnLbl').textContent = '消費 ' + (S.deficit.burnTrain||2700) + ' kcal';
-  document.getElementById('offBurnLbl').textContent = '消費 ' + (S.deficit.burnOff||2400) + ' kcal';
-  const lbl=document.getElementById('todayDefLbl');
-  const burn=getBurn(S.date);
-  if(burn===null){ lbl.textContent=''; return; }
-  const d = burn - getTotals().cal;
-  if(d>=0){ lbl.textContent='今日カットできたカロリー: +' + d + ' kcal'; lbl.style.color='var(--green)'; }
-  else { lbl.textContent = Math.abs(d) + ' kcal オーバー（今日は赤字なし）'; lbl.style.color='var(--danger)'; }
+  if(!btnT)return;
+  btnT.classList.toggle('active',type==='train');
+  btnO.classList.toggle('active',type==='off');
+  const lbl=document.getElementById('todayDefLbl'); if(!lbl)return;
+  const {cal}=getTotals(); const burn=getBurn(S.date);
+  if(burn===null){lbl.textContent='';return;}
+  const d=burn-cal;
+  if(d>=0){ lbl.textContent='今日カットできたカロリー: +'+d+' kcal'; lbl.style.color='var(--green)'; }
+  else { lbl.textContent=Math.abs(d)+' kcal オーバー（今日は赤字なし）'; lbl.style.color='var(--danger)'; }
 }
 function renderDeficit(){
   const total=calcTotalDeficit();
   const target=S.deficit.target||28800;
-  const pct=Math.min(100, Math.max(0, (total/Math.max(target,1))*100));
-  ['defBar','defBar2'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.width=pct+'%'; });
-  document.getElementById('defPct').textContent=Math.round(pct)+'%';
-  ['defNow','defNow2'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.textContent=total.toLocaleString(); el.style.color=total<0?'var(--danger)':'var(--green)'; } });
-  ['defTarget','defTarget2'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='/ ' + target.toLocaleString() + ' kcal'; });
-  const days=Object.keys(S.dayTypes||{}).length;
-  let etaText='モードを選ぶと進捗が記録されます';
-  let etaColor='var(--text2)';
-  if(days>0 && total>0){ const avg=total/days; const rem=target-total; const dLeft=rem>0?Math.ceil(rem/avg):0; etaText = dLeft>0 ? 'あと約' + dLeft + '日でゴール 🏁' : '🎉 目標達成！おめでとうございます！'; if(dLeft===0) etaColor='var(--green)'; }
-  if(days>0 && total<=0){ etaText='⚠️ 現時点ではオーバー分が累積を上回っています'; etaColor='var(--danger)'; }
-  ['defEta','defEta2'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.textContent=etaText; el.style.color=etaColor; } });
+  const pct=Math.min(100,Math.max(0,(total/target)*100));
+  ['defBar','defBar2'].forEach(id=>{ const el=document.getElementById(id); if(el)el.style.width=pct+'%'; });
+  const defPct=document.getElementById('defPct'); if(defPct) defPct.textContent=Math.round(pct)+'%';
+  ['defNow','defNow2'].forEach(id=>{ const el=document.getElementById(id); if(el){el.textContent=total.toLocaleString();el.style.color=total<0?'var(--danger)':'var(--green)';} });
+  ['defTarget','defTarget2'].forEach(id=>{ const el=document.getElementById(id); if(el)el.textContent='/ '+target.toLocaleString()+' kcal'; });
+  const days=Object.keys(S.dayTypes||{}).filter(date => (S.logs[date]||[]).length>0).length;
+  const etaText = (()=>{
+    if(days>0&&total>0){ const avg=total/days; const rem=target-total; const dLeft=rem>0?Math.ceil(rem/avg):0; return dLeft>0?'あと約'+dLeft+'日でゴール 🏁':'🎉 目標達成！おめでとうございます！'; }
+    if(days>0&&total<=0){ return '⚠️ 現時点ではオーバー分が累積を上回っています'; }
+    return 'モードを選ぶと進捗が記録されます';
+  })();
+  ['defEta','defEta2'].forEach(id=>{ const el=document.getElementById(id); if(el){el.textContent=etaText;el.style.color=total>=target?'var(--green)':total<0?'var(--danger)':'var(--text2)';} });
 }
 
-function saveWeight(){ if(!S.weights) S.weights={}; const v=document.getElementById('weightInput').value; if(v) S.weights[S.date]=parseFloat(v); else delete S.weights[S.date]; save(); }
-function loadWeight(){ if(!S.weights) S.weights={}; const v=S.weights[S.date]; document.getElementById('weightInput').value = v || ''; }
+// Weight
+function saveWeight(){
+  if(!S.weights) S.weights={};
+  if(!S.weightHistory) S.weightHistory={};
+  const raw=document.getElementById('weightInput').value;
+  if(!raw){
+    delete S.weights[S.date];
+    delete S.weightHistory[S.date];
+    save();
+    renderWeightPage();
+    return;
+  }
+  const value=parseFloat(raw);
+  if(Number.isNaN(value)) return;
 
+  const now=new Date();
+  const time=now.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+  const stamp=now.getTime();
+  if(!Array.isArray(S.weightHistory[S.date])) S.weightHistory[S.date]=[];
+
+  const last=S.weightHistory[S.date][S.weightHistory[S.date].length-1];
+  if(last && Number(last.weight)===value){
+    S.weights[S.date]=value;
+    save();
+    renderWeightPage();
+    return;
+  }
+
+  S.weightHistory[S.date].push({ id: uid(), weight:value, time, stamp });
+  S.weights[S.date]=value;
+  save();
+  renderWeightPage();
+}
+function loadWeight(){
+  if(!S.weights)S.weights={};
+  if(!S.weightHistory)S.weightHistory={};
+  const history=Array.isArray(S.weightHistory[S.date]) ? S.weightHistory[S.date] : [];
+  const v=history.length ? history[history.length-1].weight : S.weights[S.date];
+  document.getElementById('weightInput').value=(v ?? '');
+}
+
+function normalizeWeightHistory(){
+  if(!S.weightHistory) S.weightHistory={};
+  if(!S.weights) S.weights={};
+  Object.entries(S.weights).forEach(([date, weight]) => {
+    if(Array.isArray(S.weightHistory[date])) return;
+    if(weight === '' || weight === null || Number.isNaN(Number(weight))) return;
+    S.weightHistory[date] = [{ id: uid(), weight:Number(weight), time:'00:00', stamp: parseLocalDate(date).getTime() }];
+  });
+}
+
+function getWeightEntries(){
+  normalizeWeightHistory();
+  return Object.entries(S.weightHistory)
+    .flatMap(([date, items]) => (Array.isArray(items) ? items : []).map((item, idx) => ({
+      date,
+      weight:Number(item.weight),
+      time:item.time || '00:00',
+      stamp:Number(item.stamp) || (parseLocalDate(date).getTime() + idx),
+      id:item.id || `${date}-${idx}`
+    })))
+    .filter(entry => !Number.isNaN(entry.weight))
+    .sort((a,b)=> a.stamp - b.stamp);
+}
+
+function renderWeightPage(){
+  const GOAL_WEIGHT = 73.0;
+  const entries = getWeightEntries();
+  const emptyEl = document.getElementById('weightChartEmpty');
+  const latestEl = document.getElementById('weightLatest');
+  const startEl = document.getElementById('weightStart');
+  const deltaEl = document.getElementById('weightDelta');
+  const goalDiffEl = document.getElementById('weightGoalDiff');
+  const rangeEl = document.getElementById('weightRangeLabel');
+  if(rangeEl){
+    rangeEl.textContent = entries.length ? `${fmtDate(entries[0].date)} 〜 ${fmtDate(entries[entries.length-1].date)}` : '';
+  }
+  if(!entries.length){
+    if(emptyEl) emptyEl.style.display='block';
+    const canvas=document.getElementById('weightChart');
+    if(canvas){ const ctx=canvas.getContext('2d'); canvas.height=0; ctx && ctx.clearRect(0,0,canvas.width,canvas.height); }
+    if(latestEl) latestEl.textContent='--';
+    if(startEl) startEl.textContent='--';
+    if(deltaEl){ deltaEl.textContent='--'; deltaEl.style.color='var(--text2)'; }
+    if(goalDiffEl){ goalDiffEl.textContent='--'; goalDiffEl.style.color='var(--text2)'; }
+    return;
+  }
+  if(emptyEl) emptyEl.style.display='none';
+  const latest = entries[entries.length-1].weight;
+  const start = entries[0].weight;
+  const delta = Math.round((latest-start)*10)/10;
+  if(latestEl) latestEl.textContent = latest.toFixed(1)+'kg';
+  if(startEl) startEl.textContent = start.toFixed(1)+'kg';
+  if(deltaEl){
+    deltaEl.textContent = (delta>0?'+':'') + delta.toFixed(1)+'kg';
+    deltaEl.style.color = delta<0 ? 'var(--green)' : delta>0 ? 'var(--danger)' : 'var(--text)';
+  }
+  const goalDiff = Math.round((latest-GOAL_WEIGHT)*10)/10;
+  if(goalDiffEl){
+    goalDiffEl.textContent = (goalDiff>0?'+':'') + goalDiff.toFixed(1)+'kg';
+    goalDiffEl.style.color = goalDiff>0 ? 'var(--danger)' : goalDiff<0 ? 'var(--green)' : 'var(--text)';
+  }
+
+  const canvas=document.getElementById('weightChart');
+  if(!canvas) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.parentElement.clientWidth-16;
+  const H=220;
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,H);
+
+  const minW = Math.min(...entries.map(e=>e.weight), GOAL_WEIGHT);
+  const maxW = Math.max(...entries.map(e=>e.weight), GOAL_WEIGHT);
+  const pad = Math.max(0.6, Math.ceil(((maxW-minW)||1)*0.4*10)/10);
+  const chartMin = Math.floor((minW-pad)*10)/10;
+  const chartMax = Math.ceil((maxW+pad)*10)/10;
+  const padL=38, padR=12, padT=12, padB=28;
+  const chartW=W-padL-padR, chartH=H-padT-padB;
+
+  const tickCount = 4;
+  for(let i=0;i<=tickCount;i++){
+    const t=i/tickCount;
+    const value=chartMax-(chartMax-chartMin)*t;
+    const y=padT+chartH*t;
+    ctx.strokeStyle='rgba(255,255,255,0.08)';
+    ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padL+chartW,y); ctx.stroke();
+    ctx.fillStyle='rgba(139,146,168,0.85)';
+    ctx.font='10px sans-serif';
+    ctx.textAlign='right';
+    ctx.fillText(value.toFixed(1), padL-6, y+3);
+  }
+
+  const goalY = padT + (chartMax-GOAL_WEIGHT)/(chartMax-chartMin||1)*chartH;
+  ctx.setLineDash([5,5]);
+  ctx.strokeStyle='rgba(168,255,110,0.9)';
+  ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(padL,goalY); ctx.lineTo(padL+chartW,goalY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='rgba(168,255,110,0.95)';
+  ctx.font='bold 10px sans-serif';
+  ctx.textAlign='right';
+  ctx.fillText('目標 73.0kg', padL+chartW, Math.max(12, goalY-6));
+
+  const gap = entries.length===1 ? 0 : chartW/(entries.length-1);
+  const points = entries.map((entry, idx) => {
+    const x = entries.length===1 ? padL + chartW/2 : padL + gap*idx;
+    const y = padT + (chartMax-entry.weight)/(chartMax-chartMin||1)*chartH;
+    return { ...entry, x, y };
+  });
+
+  ctx.beginPath();
+  points.forEach((p,idx)=>{ idx===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y); });
+  ctx.strokeStyle='rgba(94,234,212,0.95)';
+  ctx.lineWidth=3;
+  ctx.stroke();
+
+  points.forEach((p,idx)=>{
+    ctx.beginPath(); ctx.arc(p.x,p.y,4.5,0,Math.PI*2); ctx.fillStyle='#5eead4'; ctx.fill();
+    ctx.beginPath(); ctx.arc(p.x,p.y,2,0,Math.PI*2); ctx.fillStyle='#ffffff'; ctx.fill();
+    const dt=parseLocalDate(p.date);
+    const sameDayAsPrev = idx>0 && points[idx-1].date===p.date;
+    const label = sameDayAsPrev ? p.time : dt.toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'});
+    ctx.fillStyle=idx===points.length-1?'#e8edf5':'rgba(139,146,168,0.9)';
+    ctx.font=(idx===points.length-1?'bold ':'')+'10px sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText(label,p.x,H-10);
+  });
+}
+
+// Chart
 function renderChart(){
-  const canvas=document.getElementById('calChart'); if(!canvas) return;
+  const canvas=document.getElementById('calChart'); if(!canvas)return;
   const goal=S.goals.cal||2200;
-  document.getElementById('chartGoalLbl').textContent='目標 ' + goal.toLocaleString() + ' kcal';
+  document.getElementById('chartGoalLbl').textContent='目標 '+goal.toLocaleString()+' kcal';
 
   const days=[];
   for(let i=6;i>=0;i--){
-    const dt=parseDateStr(S.date); dt.setDate(dt.getDate()-i);
-    const dateStr = dt.getFullYear() + '-' + pad2(dt.getMonth()+1) + '-' + pad2(dt.getDate());
-    const cal = Math.round(getTotals(dateStr).cal);
-    const label = dt.toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'});
-    days.push({ label, cal, isToday: dateStr===S.date, dateStr });
+    const dt=parseLocalDate(S.date); dt.setDate(dt.getDate()-i);
+    const dateStr=formatLocalDate(dt);
+    const logs=S.logs[dateStr]||[]; let cal=0;
+    logs.forEach(l=>{ if(l.tmpName){cal+=l.tmpCal;return;} const f=S.foods.find(f=>f.id===l.fid); if(f)cal+=f.cal*l.qty; });
+    const label=dt.toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'});
+    days.push({label, cal:Math.round(cal), isToday:dateStr===S.date, dateStr});
   }
 
   const dpr=window.devicePixelRatio||1;
@@ -729,8 +1031,7 @@ function renderChart(){
   const H=152;
   canvas.width=W*dpr; canvas.height=H*dpr;
   canvas.style.width=W+'px'; canvas.style.height=H+'px';
-  const ctx=canvas.getContext('2d');
-  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
   ctx.clearRect(0,0,W,H);
 
   const highest=Math.max(goal, ...days.map(d=>d.cal), 500);
@@ -747,7 +1048,7 @@ function renderChart(){
     ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padL+chartW,y); ctx.stroke();
     if(isMid && v<maxVal){
       ctx.fillStyle='rgba(139,146,168,0.85)';
-      ctx.font='9px -apple-system,sans-serif';
+      ctx.font='9px sans-serif';
       ctx.textAlign='right';
       ctx.fillText(v.toLocaleString(), padL-4, y+3);
     }
@@ -760,15 +1061,16 @@ function renderChart(){
   ctx.beginPath(); ctx.moveTo(padL,goalY); ctx.lineTo(padL+chartW,goalY); ctx.stroke();
   ctx.setLineDash([]);
   ctx.fillStyle='rgba(168,255,110,0.85)';
-  ctx.font='bold 9px -apple-system,sans-serif';
+  ctx.font='bold 9px sans-serif';
   ctx.textAlign='right';
   ctx.fillText('目標', padL-4, Math.max(10, goalY-4));
 
   const barW=Math.min(32, (chartW/7)*0.62);
   const gap=chartW/7;
+
   days.forEach((d,i)=>{
     const x=padL+gap*i+gap/2;
-    const barH=d.cal>0 ? Math.max(3, chartH*(d.cal/maxVal)) : 0;
+    const barH=d.cal>0?Math.max(3, chartH*(d.cal/maxVal)):0;
     const y=padT+chartH-barH;
     const over=d.cal>goal;
 
@@ -797,13 +1099,13 @@ function renderChart(){
 
     if(over && d.cal>0){
       ctx.fillStyle='#f87171';
-      ctx.font='bold 9px -apple-system,sans-serif';
+      ctx.font='bold 9px sans-serif';
       ctx.textAlign='center';
-      ctx.fillText('+' + Math.round(d.cal-goal), x, y-4);
+      ctx.fillText('+'+Math.round(d.cal-goal), x, y-4);
     }
 
     ctx.fillStyle=d.isToday?'#e8edf5':'rgba(139,146,168,0.82)';
-    ctx.font=(d.isToday?'bold ':'')+'9px -apple-system,sans-serif';
+    ctx.font=(d.isToday?'bold ':'')+'9px sans-serif';
     ctx.textAlign='center';
     ctx.fillText(d.label, x, H-padB+20);
   });
@@ -813,6 +1115,7 @@ function renderChart(){
   ctx.beginPath(); ctx.moveTo(padL,padT+chartH); ctx.lineTo(padL+chartW,padT+chartH); ctx.stroke();
 }
 
+// Log
 function renderLog(){
   renderSummary(); loadWeight(); renderDayMode(); renderDeficit(); renderChart();
   const hint=document.getElementById('logHint'); hint.style.display=S.foods.length===0?'flex':'none';
@@ -824,25 +1127,26 @@ function renderLog(){
       return '<div class="log-item">'
         +'<div class="log-emoji">📝</div>'
         +'<div class="log-info">'
-        +'<div class="log-name">'+escapeHtml(l.tmpName)+' <span style="font-size:9px;background:rgba(251,146,60,.15);color:#fb923c;border-radius:4px;padding:1px 5px;font-weight:600">一時</span></div>'
+        +'<div class="log-name">'+l.tmpName+' <span style="font-size:9px;background:rgba(251,146,60,.15);color:#fb923c;border-radius:4px;padding:1px 5px;font-weight:600">一時</span></div>'
         +'<div class="log-sub">'+l.time+'</div>'
         +'</div>'
         +'<div class="log-nums"><div class="log-cal">'+l.tmpCal+' kcal</div><div class="log-prot">'+l.tmpProt+'g</div></div>'
         +'<button class="del-btn" onclick="delLog(\''+l.id+'\')">×</button>'
         +'</div>';
     }
-    const f=S.foods.find(x=>x.id===l.fid); if(!f) return '';
+    const f=S.foods.find(f=>f.id===l.fid); if(!f)return'';
     const c=Math.round(f.cal*l.qty*10)/10, p=Math.round(f.prot*l.qty*10)/10;
     return '<div class="log-item">'
       +'<div class="log-emoji">'+f.emoji+'</div>'
-      +'<div class="log-info"><div class="log-name">'+escapeHtml(f.name)+'</div><div class="log-sub">'+(l.qty>1?'×'+l.qty+'　':'')+l.time+'</div></div>'
+      +'<div class="log-info"><div class="log-name">'+f.name+'</div><div class="log-sub">'+(l.qty>1?'×'+l.qty+'　':'')+l.time+'</div></div>'
       +'<div class="log-nums"><div class="log-cal">'+c+' kcal</div><div class="log-prot">'+p+'g</div></div>'
       +'<button class="del-btn" onclick="delLog(\''+l.id+'\')">×</button>'
       +'</div>';
   }).join('');
 }
-function delLog(id){ S.logs[S.date]=(S.logs[S.date]||[]).filter(l=>l.id!==id); renderLog(); save(); showToast('削除しました'); }
+function delLog(id){ S.logs[S.date]=(S.logs[S.date]||[]).filter(l=>l.id!==id); renderLog();renderChart();save();showToast('削除しました'); }
 
+// Add Log
 function openAddLog(){
   bulkQtyMap={};
   document.getElementById('logSearch').value='';
@@ -855,29 +1159,43 @@ function openAddLog(){
 }
 function renderLogList(){
   const q=document.getElementById('logSearch').value.toLowerCase();
-  const list=S.foods.filter(f=>f.name.toLowerCase().includes(q));
-  const el=document.getElementById('logFoodList');
-  const noEl=document.getElementById('logNoFood');
-  if(!S.foods.length){ el.innerHTML=''; noEl.style.display='block'; updateBulkSummary(); return; }
+  const filtered=S.foods.filter(f=>f.name.toLowerCase().includes(q));
+  const normalFoods=sortFoodsByUsage(filtered.filter(f=>!isAlcoholFood(f)));
+  const alcoholFoods=sortFoodsByUsage(filtered.filter(isAlcoholFood));
+  const el=document.getElementById('logFoodList'); const noEl=document.getElementById('logNoFood');
+  if(!S.foods.length){el.innerHTML='';noEl.style.display='block';updateBulkSummary();return;}
   noEl.style.display='none';
-  el.innerHTML=list.length
-    ? list.map(f=>{
-        const qty=bulkQtyMap[f.id]||0;
-        return '<div class="bulk-row">'
-          +'<div class="bulk-emoji">'+f.emoji+'</div>'
-          +'<div class="bulk-info"><div class="bulk-name">'+escapeHtml(f.name)+'</div><div class="bulk-mac">'+f.cal+' kcal ／ タンパク質 '+f.prot+'g</div></div>'
-          +'<div class="bulk-stepper">'
-          +'<button class="bulk-btn" onclick="changeBulkQty(\''+f.id+'\',-1)">－</button>'
-          +'<div class="bulk-qty" id="bulkQty-'+f.id+'">'+qty+'</div>'
-          +'<button class="bulk-btn" onclick="changeBulkQty(\''+f.id+'\',1)">＋</button>'
-          +'</div>'
-          +'</div>';
-      }).join('')
-    : '<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">見つかりませんでした</div>';
+  if(!filtered.length){
+    el.innerHTML='<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">見つかりませんでした</div>';
+    updateBulkSummary();
+    return;
+  }
+  const renderBulkRow=(f)=>{
+    const qty=bulkQtyMap[f.id]||0;
+    return '<div class="bulk-row">'
+      +'<div class="bulk-emoji">'+f.emoji+'</div>'
+      +'<div class="bulk-info"><div class="bulk-name">'+f.name+'</div><div class="bulk-mac">'+f.cal+' kcal ／ タンパク質 '+f.prot+'g ・ 使用 '+getFoodUseCount(f.id)+'回</div></div>'
+      +'<div class="bulk-stepper">'
+      +'<button class="bulk-btn" onclick="changeBulkQty(\''+f.id+'\',-1)">－</button>'
+      +'<div class="bulk-qty" id="bulkQty-'+f.id+'">'+qty+'</div>'
+      +'<button class="bulk-btn" onclick="changeBulkQty(\''+f.id+'\',1)">＋</button>'
+      +'</div>'
+      +'</div>';
+  };
+  const groupHtml=alcoholFoods.length ? '<div class="group-card">'
+      +'<div class="group-head" onclick="toggleAlcoholLogGroup()">'
+      +'<div class="bulk-emoji">🍺</div>'
+      +'<div class="bulk-info"><div class="bulk-name">お酒</div><div class="group-sub">'+alcoholFoods.length+'種類から選択</div></div>'
+      +'<div style="margin-left:auto;color:var(--text2);font-size:18px;">'+(alcoholLogExpanded?'⌃':'⌄')+'</div>'
+      +'</div>'
+      +(alcoholLogExpanded ? '<div class="group-children">'+alcoholFoods.map(renderBulkRow).join('')+'</div>' : '')
+    +'</div>' : '';
+  el.innerHTML = normalFoods.map(renderBulkRow).join('') + groupHtml;
   updateBulkSummary();
 }
-function changeBulkQty(fid, delta){
-  const next=Math.max(0, (bulkQtyMap[fid]||0)+delta);
+function toggleAlcoholLogGroup(){ alcoholLogExpanded=!alcoholLogExpanded; renderLogList(); }
+function changeBulkQty(fid,delta){
+  const next=Math.max(0,(bulkQtyMap[fid]||0)+delta);
   if(next===0) delete bulkQtyMap[fid]; else bulkQtyMap[fid]=next;
   const q=document.getElementById('bulkQty-'+fid);
   if(q) q.textContent=bulkQtyMap[fid]||0;
@@ -887,99 +1205,73 @@ function updateBulkSummary(){
   let count=0, cal=0, prot=0;
   Object.entries(bulkQtyMap).forEach(([fid,qty])=>{
     const f=S.foods.find(x=>x.id===fid);
-    if(!f || !qty) return;
-    count += qty; cal += f.cal*qty; prot += f.prot*qty;
+    if(!f||!qty)return;
+    count+=qty; cal+=f.cal*qty; prot+=f.prot*qty;
   });
   document.getElementById('bulkCount').textContent=count;
   document.getElementById('bulkCal').textContent=Math.round(cal*10)/10;
   document.getElementById('bulkProt').textContent=(Math.round(prot*10)/10)+'g';
-  document.getElementById('bulkAddBtn').disabled = count===0;
+  document.getElementById('bulkAddBtn').disabled=count===0;
 }
 function confirmBulkLog(){
   const entries=Object.entries(bulkQtyMap).filter(([_,qty])=>qty>0);
   if(!entries.length) return;
   const now=new Date(); const time=now.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
-  if(!S.logs[S.date]) S.logs[S.date]=[];
-  entries.forEach(([fid, qty])=>{ S.logs[S.date].push({id:uid(), fid, qty, time}); });
+  if(!S.logs[S.date])S.logs[S.date]=[];
+  entries.forEach(([fid,qty])=>{ S.logs[S.date].push({id:uid(),fid,qty,time}); });
   bulkQtyMap={};
   closeModal('mAddLog');
-  renderLog(); save(); showToast('まとめて記録しました ✓');
+  renderLog();renderChart();save();showToast('まとめて記録しました ✓');
 }
 
-function logOneTime(){
-  const name=document.getElementById('tmpName').value.trim();
-  const cal=parseFloat(document.getElementById('tmpCal').value)||0;
-  const prot=parseFloat(document.getElementById('tmpProt').value)||0;
-  if(!name){ document.getElementById('tmpName').focus(); return; }
-  const now=new Date(); const time=now.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
-  if(!S.logs[S.date]) S.logs[S.date]=[];
-  S.logs[S.date].push({id:uid(), tmpName:name, tmpCal:cal, tmpProt:prot, qty:1, time});
-  closeModal('mAddLog'); renderLog(); save(); showToast('記録しました ✓');
-}
+// Qty
+function openQty(fid){ const f=S.foods.find(f=>f.id===fid); if(!f)return; pendingFood=f;pendingQty=1; document.getElementById('qtyTitle').textContent=f.emoji+' '+f.name; updateQty(); closeModal('mAddLog'); setTimeout(()=>openModal('mQty'),120); }
+function changeQty(d){ pendingQty=Math.max(0.5,pendingQty+d); pendingQty=pendingQty>1?Math.round(pendingQty):Math.round(pendingQty*2)/2; updateQty(); }
+function updateQty(){ document.getElementById('qtyNum').textContent=pendingQty; if(pendingFood){ const c=Math.round(pendingFood.cal*pendingQty*10)/10; const p=Math.round(pendingFood.prot*pendingQty*10)/10; document.getElementById('qtyPreview').textContent=c+' kcal ／ タンパク質 '+p+'g'; } }
+function confirmLog(){ if(!pendingFood)return; const now=new Date(); const time=now.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'}); if(!S.logs[S.date])S.logs[S.date]=[]; S.logs[S.date].push({id:uid(),fid:pendingFood.id,qty:pendingQty,time}); closeModal('mQty');renderLog();renderChart();save();showToast('記録しました ✓'); }
 
+// One-time
+function logOneTime(){ const name=document.getElementById('tmpName').value.trim(); const cal=parseFloat(document.getElementById('tmpCal').value)||0; const prot=parseFloat(document.getElementById('tmpProt').value)||0; if(!name){document.getElementById('tmpName').focus();return;} const now=new Date(); const time=now.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'}); if(!S.logs[S.date])S.logs[S.date]=[]; S.logs[S.date].push({id:uid(),tmpName:name,tmpCal:cal,tmpProt:prot,qty:1,time}); closeModal('mAddLog');renderLog();renderChart();save();showToast('記録しました ✓'); }
+
+// Food DB
 function renderFoods(){
   const q=document.getElementById('foodSearch').value.toLowerCase();
-  const list=S.foods.filter(f=>f.name.toLowerCase().includes(q));
+  const filtered=S.foods.filter(f=>f.name.toLowerCase().includes(q));
+  const normalFoods=sortFoodsByUsage(filtered.filter(f=>!isAlcoholFood(f)));
+  const alcoholFoods=sortFoodsByUsage(filtered.filter(isAlcoholFood));
   const el=document.getElementById('foodList');
-  if(!list.length){ el.innerHTML='<div class="empty"><span class="empty-ico">🥗</span>食品が登録されていません<br>上の緑のバナーから追加！</div>'; return; }
-  el.innerHTML=list.map(f=>'<div class="food-item"><div class="food-emoji">'+f.emoji+'</div><div class="food-info"><div class="food-name">'+escapeHtml(f.name)+'</div><div class="food-macro">'+f.cal+' kcal ／ タンパク質 '+f.prot+'g</div></div><div class="food-acts"><button class="act-btn green" onclick="quickLog(\''+f.id+'\')">+ 記録</button><button class="act-btn red" onclick="delFood(\''+f.id+'\')">×</button></div></div>').join('');
+  if(!filtered.length){
+    el.innerHTML='<div class="empty"><span class="empty-ico">🥗</span>食品が登録されていません<br>上の緑のバナーから追加！</div>';
+    return;
+  }
+  const renderFoodItem=(f)=>'<div class="food-item"><div class="food-emoji">'+f.emoji+'</div><div class="food-info"><div class="food-name">'+f.name+'</div><div class="food-macro">'+f.cal+' kcal ／ タンパク質 '+f.prot+'g ・ 使用 '+getFoodUseCount(f.id)+'回</div></div><div class="food-acts"><button class="act-btn green" onclick="quickLog(\''+f.id+'\')">+ 記録</button><button class="act-btn red" onclick="delFood(\''+f.id+'\')">×</button></div></div>';
+  const normalHtml=normalFoods.map(renderFoodItem).join('');
+  const alcoholHtml=alcoholFoods.length ? '<div class="group-card">'
+    +'<div class="group-head" onclick="toggleAlcoholFoodGroup()">'
+    +'<div class="food-emoji">🍺</div>'
+    +'<div class="food-info"><div class="food-name">お酒</div><div class="group-sub">'+alcoholFoods.length+'種類 ・ よく使う順</div></div>'
+    +'<div style="margin-left:auto;color:var(--text2);font-size:18px;">'+(alcoholFoodExpanded?'⌃':'⌄')+'</div>'
+    +'</div>'
+    +(alcoholFoodExpanded ? '<div class="group-children">'+alcoholFoods.map(renderFoodItem).join('')+'</div>' : '')
+    +'</div>' : '';
+  el.innerHTML='<div class="food-stack">'+normalHtml+alcoholHtml+'</div>';
 }
-function quickLog(fid){ bulkQtyMap={ [fid]: 1 }; switchPage('log'); setTimeout(()=>{ renderLogList(); updateBulkSummary(); openModal('mAddLog'); },100); }
-function delFood(id){ if(!confirm('この食品を削除しますか？')) return; S.foods=S.foods.filter(f=>f.id!==id); renderFoods(); save(); showToast('削除しました'); }
+function toggleAlcoholFoodGroup(){ alcoholFoodExpanded=!alcoholFoodExpanded; renderFoods(); }
+function quickLog(fid){ switchPage('log'); setTimeout(()=>openQty(fid),100); }
+function delFood(id){ if(!confirm('この食品を削除しますか？'))return; S.foods=S.foods.filter(f=>f.id!==id); renderFoods();save();showToast('削除しました'); }
 
-function openAddFood(){ document.getElementById('fName').value=''; document.getElementById('fCal').value=''; document.getElementById('fProt').value=''; selEmoji='🍚'; renderEmojiGrid(); openModal('mAddFood'); setTimeout(()=>document.getElementById('fName').focus(),350); }
+// Add Food
+function openAddFood(){ document.getElementById('fName').value=''; document.getElementById('fCal').value=''; document.getElementById('fProt').value=''; selEmoji='🍚';renderEmojiGrid(); openModal('mAddFood'); setTimeout(()=>document.getElementById('fName').focus(),350); }
 function renderEmojiGrid(){ document.getElementById('emojiGrid').innerHTML=EMOJIS.map(e=>'<div class="e-opt'+(e===selEmoji?' sel':'')+'" onclick="pickEmoji(\''+e+'\')">'+e+'</div>').join(''); }
-function pickEmoji(e){ selEmoji=e; renderEmojiGrid(); }
-function saveFood(){
-  const name=document.getElementById('fName').value.trim();
-  const cal=parseFloat(document.getElementById('fCal').value)||0;
-  const prot=parseFloat(document.getElementById('fProt').value)||0;
-  if(!name){ document.getElementById('fName').focus(); return; }
-  S.foods.push({id:uid(), name, emoji:selEmoji, cal, prot});
-  closeModal('mAddFood'); renderFoods(); save(); showToast('登録しました ✓');
-}
+function pickEmoji(e){ selEmoji=e;renderEmojiGrid(); }
+function saveFood(){ const name=document.getElementById('fName').value.trim(); const cal=parseFloat(document.getElementById('fCal').value)||0; const prot=parseFloat(document.getElementById('fProt').value)||0; if(!name){document.getElementById('fName').focus();return;} const category=isAlcoholFood({name}) ? 'alcohol' : 'food'; S.foods.push({id:uid(),name,emoji:selEmoji,cal,prot,category}); closeModal('mAddFood');renderFoods();save();showToast('登録しました ✓'); }
 
-function renderGoals(){
-  document.getElementById('goalCalIn').value=S.goals.cal||'';
-  document.getElementById('goalProtIn').value=S.goals.prot||'';
-  document.getElementById('goalDeficit').value=(S.deficit&&S.deficit.target)||28800;
-  document.getElementById('goalBurnTrain').value=(S.deficit&&S.deficit.burnTrain)||2700;
-  document.getElementById('goalBurnOff').value=(S.deficit&&S.deficit.burnOff)||2400;
-  renderDeficitGoalsPage();
-}
-function saveGoals(){
-  S.goals.cal=parseInt(document.getElementById('goalCalIn').value)||2200;
-  S.goals.prot=parseInt(document.getElementById('goalProtIn').value)||130;
-  if(!S.deficit) S.deficit={};
-  S.deficit.target=parseInt(document.getElementById('goalDeficit').value)||28800;
-  S.deficit.burnTrain=parseInt(document.getElementById('goalBurnTrain').value)||2700;
-  S.deficit.burnOff=parseInt(document.getElementById('goalBurnOff').value)||2400;
-  save(); renderSummary(); renderDeficit(); renderDeficitGoalsPage(); renderDayMode(); showToast('保存しました ✓');
-}
-function renderDeficitGoalsPage(){
-  const total=calcTotalDeficit();
-  const target=(S.deficit&&S.deficit.target)||28800;
-  const pct=Math.min(100, Math.max(0, (total/Math.max(target,1))*100));
-  const bar=document.getElementById('defBar2'); if(!bar) return;
-  bar.style.width=pct+'%';
-  document.getElementById('defNow2').textContent=total.toLocaleString();
-  document.getElementById('defTarget2').textContent='/ '+target.toLocaleString()+' kcal';
-  const days=Object.keys(S.dayTypes||{}).length;
-  const etaEl=document.getElementById('defEta2');
-  if(days>0 && total>0){ const avg=total/days; const rem=target-total; const dL=rem>0?Math.ceil(rem/avg):0; etaEl.textContent=dL>0?'あと約'+dL+'日でゴール 🏁':'🎉 目標達成！'; etaEl.style.color=dL===0?'var(--green)':'var(--text2)'; }
-  else if(days>0 && total<=0){ etaEl.textContent='⚠️ 現時点ではオーバー分が累積を上回っています'; etaEl.style.color='var(--danger)'; }
-  else { etaEl.textContent='モードを選ぶと進捗が記録されます'; etaEl.style.color='var(--text2)'; }
-}
+// Goals
+function renderGoals(){ document.getElementById('goalCalIn').value=S.goals.cal||''; document.getElementById('goalProtIn').value=S.goals.prot||''; document.getElementById('goalDeficit').value=(S.deficit&&S.deficit.target)||28800; document.getElementById('goalBurnTrain').value=(S.deficit&&S.deficit.burnTrain)||2700; document.getElementById('goalBurnOff').value=(S.deficit&&S.deficit.burnOff)||2400; renderDeficitGoalsPage(); }
+function saveGoals(){ S.goals.cal=parseInt(document.getElementById('goalCalIn').value)||2200; S.goals.prot=parseInt(document.getElementById('goalProtIn').value)||130; if(!S.deficit)S.deficit={}; S.deficit.target=parseInt(document.getElementById('goalDeficit').value)||28800; S.deficit.burnTrain=parseInt(document.getElementById('goalBurnTrain').value)||2700; S.deficit.burnOff=parseInt(document.getElementById('goalBurnOff').value)||2400; save();renderSummary();renderDeficit();renderDeficitGoalsPage();showToast('保存しました ✓'); }
+function renderDeficitGoalsPage(){ const total=calcTotalDeficit(); const target=(S.deficit&&S.deficit.target)||28800; const pct=Math.min(100,Math.max(0,(total/target)*100)); const bar=document.getElementById('defBar2'); if(!bar)return; bar.style.width=pct+'%'; document.getElementById('defNow2').textContent=total.toLocaleString(); document.getElementById('defTarget2').textContent='/ '+target.toLocaleString()+' kcal'; const days=Object.keys(S.dayTypes||{}).filter(date => (S.logs[date]||[]).length>0).length; const etaEl=document.getElementById('defEta2'); if(days>0&&total>0){ const avg=total/days; const rem=target-total; const dL=rem>0?Math.ceil(rem/avg):0; etaEl.textContent=dL>0?'あと約'+dL+'日でゴール 🏁':'🎉 目標達成！'; etaEl.style.color=dL===0?'var(--green)':'var(--text2)'; }else if(days>0&&total<=0){ etaEl.textContent='⚠️ 現時点ではオーバー分が累積を上回っています'; etaEl.style.color='var(--danger)'; } else {etaEl.textContent='モードを選ぶと進捗が記録されます'; etaEl.style.color='var(--text2)';} }
 
-function exportData(){
-  const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(b);
-  a.download='nutrilog-'+todayStr()+'.json';
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
-  showToast('JSONを書き出しました ✓');
-}
+function exportData(){ const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='nutrilog-'+todayStr()+'.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000); showToast('JSONを書き出しました ✓'); }
 function triggerImport(){ document.getElementById('importJson').click(); }
 function importData(event){
   const file = event.target.files && event.target.files[0];
@@ -989,8 +1281,9 @@ function importData(event){
     try{
       const data = JSON.parse(reader.result);
       S = { ...S, ...data };
+      normalizeWeightHistory();
       save();
-      renderDate(); renderLog(); renderGoals(); renderFoods();
+      renderDate(); renderLog(); renderWeightPage(); renderGoals(); renderFoods();
       showToast('JSONを読み込みました ✓');
     }catch(e){
       alert('JSONの読み込みに失敗しました');
@@ -1000,48 +1293,23 @@ function importData(event){
   };
   reader.readAsText(file, 'utf-8');
 }
-function confirmClear(){
-  if(confirm('全データを削除しますか？この操作は元に戻せません。')){
-    S.logs={}; S.foods=[]; S.dayTypes={}; S.weights={};
-    save(); renderLog(); renderFoods(); renderGoals(); showToast('削除しました');
-  }
-}
+function confirmClear(){ if(confirm('全データを削除しますか？この操作は元に戻せません。')){ S.logs={};S.foods=[];S.dayTypes={};S.weights={};S.weightHistory={}; save();renderLog();renderWeightPage();renderFoods();showToast('削除しました'); } }
 
+// Modal
 function openModal(id){ document.getElementById(id).classList.add('open'); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
-function overlayClose(id,e){ if(e.target===document.getElementById(id)) closeModal(id); }
-function switchPage(name){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-  document.getElementById('nav-'+name).classList.add('active');
-  if(name==='log') renderLog();
-  if(name==='foods') renderFoods();
-  if(name==='goals') renderGoals();
-}
-function escapeHtml(str){ return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
+function overlayClose(id,e){ if(e.target===document.getElementById(id))closeModal(id); }
 
-function addDefaults(){
-  if(S.foods.length) return;
-  [
-    {name:'完全栄養食',emoji:'🍫',cal:400,prot:30},
-    {name:'ゆで卵',emoji:'🥚',cal:75,prot:7},
-    {name:'プロテイン',emoji:'💪',cal:110,prot:21},
-    {name:'あんぱん',emoji:'🍞',cal:185,prot:4.7},
-    {name:'ドデカミン',emoji:'🥤',cal:78,prot:0},
-    {name:'牛丼 小盛',emoji:'🍚',cal:507,prot:13.1},
-    {name:'牛丼 並盛',emoji:'🍚',cal:687,prot:17.1},
-    {name:'完全栄養食(ブラックエディション)',emoji:'🍫',cal:400,prot:40},
-    {name:'羊羹(ファミマ)',emoji:'🍡',cal:166,prot:2},
-    {name:'オートミール',emoji:'🌾',cal:144,prot:3.5},
-    {name:'春雨スープ',emoji:'🍜',cal:40,prot:1},
-    {name:'生ビール（中ジョッキ）',emoji:'🍺',cal:200,prot:0},
-    {name:'ハイボール(ジョッキ)',emoji:'🥃',cal:100,prot:0}
-  ].forEach(d=>S.foods.push({id:uid(), ...d}));
-}
+// Nav
+function switchPage(name){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active')); document.getElementById('page-'+name).classList.add('active'); document.getElementById('nav-'+name).classList.add('active'); if(name==='log')renderLog(); if(name==='weight')renderWeightPage(); if(name==='foods')renderFoods(); if(name==='goals')renderGoals(); }
 
+
+// Default foods
+function addDefaults(){ if(S.foods.length)return; [{name:'完全栄養食',emoji:'🍫',cal:400,prot:30,category:'food'},{name:'ゆで卵',emoji:'🥚',cal:75,prot:7,category:'food'},{name:'プロテイン',emoji:'💪',cal:110,prot:21,category:'food'},{name:'あんぱん',emoji:'🍞',cal:185,prot:4.7,category:'food'},{name:'ドデカミン',emoji:'🥤',cal:78,prot:0,category:'food'},{name:'牛丼 小盛',emoji:'🍚',cal:507,prot:13.1,category:'food'},{name:'牛丼 並盛',emoji:'🍚',cal:687,prot:17.1,category:'food'},{name:'完全栄養食(ブラックエディション)',emoji:'🍫',cal:400,prot:40,category:'food'},{name:'羊羹(ファミマ)',emoji:'🍡',cal:166,prot:2,category:'food'},{name:'オートミール',emoji:'🌾',cal:144,prot:3.5,category:'food'},{name:'春雨スープ',emoji:'🍜',cal:40,prot:1,category:'food'},{name:'生ビール（中ジョッキ）',emoji:'🍺',cal:200,prot:0,category:'alcohol'},{name:'ハイボール(ジョッキ)',emoji:'🥃',cal:100,prot:0,category:'alcohol'},{name:'ストロングゼロ500ml',emoji:'🥫',cal:270,prot:0,category:'alcohol'},{name:'ストロングゼロ350ml',emoji:'🥫',cal:189,prot:0,category:'alcohol'},{name:'角ハイボール 500ml',emoji:'🥃',cal:240,prot:0,category:'alcohol'},{name:'角ハイボール 350ml',emoji:'🥃',cal:168,prot:0,category:'alcohol'},{name:'キリン一番搾り 糖質ゼロ 500ml',emoji:'🍺',cal:145,prot:0,category:'alcohol'},{name:'キリン一番搾り 糖質ゼロ 350ml',emoji:'🍺',cal:101,prot:0,category:'alcohol'}].forEach(d=>S.foods.push({id:uid(),...d})); }
+
+// Init
 load(); addDefaults();
-renderDate(); renderLog(); renderGoals(); renderFoods();
+renderDate(); renderLog(); renderWeightPage(); renderGoals(); renderFoods();
 </script>
 </body>
 </html>
