@@ -133,6 +133,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 .log-cal{font-size:15px;font-weight:600;color:var(--green);}
 .log-prot{font-size:11px;color:var(--teal);margin-top:1px;}
 .del-btn{background:none;border:none;color:var(--text2);font-size:20px;padding:4px 2px;cursor:pointer;flex-shrink:0;opacity:.4;}
+.log-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.mini-btn{height:30px;border-radius:8px;border:1px solid var(--border2);background:rgba(255,255,255,.03);color:var(--text3);font-size:11px;font-weight:700;cursor:pointer;padding:0 9px;display:flex;align-items:center;justify-content:center;white-space:nowrap;}
+.mini-btn.green{color:var(--green);border-color:rgba(168,255,110,.3);background:rgba(168,255,110,.06);}
 .del-btn:active{color:var(--danger);opacity:1;}
 .empty{text-align:center;padding:44px 20px;color:var(--text2);font-size:13px;line-height:2;}
 .empty-ico{font-size:44px;margin-bottom:10px;display:block;opacity:.3;}
@@ -539,8 +542,41 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 <div class="bottom-nav">
   <button class="nav-btn active" id="nav-log" onclick="switchPage('log')"><span class="nav-ico">📋</span>記録</button>
   <button class="nav-btn" id="nav-weight" onclick="switchPage('weight')"><span class="nav-ico">⚖️</span>体重</button>
+  <button class="nav-btn" id="nav-workout" onclick="switchPage('workout')"><span class="nav-ico">🏋️</span>筋トレ</button>
   <button class="nav-btn" id="nav-foods" onclick="switchPage('foods')"><span class="nav-ico">🥗</span>食品</button>
   <button class="nav-btn" id="nav-goals" onclick="switchPage('goals')"><span class="nav-ico">🎯</span>目標</button>
+</div>
+
+<!-- PAGE: 筋トレ -->
+<div class="page" id="page-workout">
+  <div style="height:16px"></div>
+  <div class="goals-wrap">
+    <div class="goals-card">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:14px;">
+        <div class="card-title" style="margin-bottom:0;">筋トレ記録</div>
+        <div id="workoutDateLabel" style="font-size:12px;color:var(--text2);"></div>
+      </div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:14px;">
+        その日に鍛えた部位をタップして記録します。全6部位が選択されたら自動でリセットされ、次のサイクルに入ります。
+      </div>
+      <div id="workoutStatus" style="font-size:12px;color:var(--text2);margin-bottom:10px;"></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <button type="button" id="workoutUndoBtn" class="act-btn" style="flex:1;justify-content:center;height:40px;" onclick="undoWorkoutAction()">↩ 取消</button>
+        <button type="button" id="workoutClearTodayBtn" class="act-btn red" style="flex:1;justify-content:center;height:40px;" onclick="clearWorkoutToday()">今日の選択をクリア</button>
+      </div>
+      <div id="workoutGrid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+        <button type="button" id="workoutBtn-legs" class="act-btn" style="height:68px;justify-content:center;font-size:15px;font-weight:700;flex-direction:column;gap:2px;" onclick="toggleWorkoutPart('legs')"><span>脚</span><span id="workoutMeta-legs" style="font-size:10px;font-weight:600;opacity:.9;">未</span><span id="workoutDate-legs" style="font-size:11px;font-weight:500;opacity:.85;">--</span></button>
+        <button type="button" id="workoutBtn-chest" class="act-btn" style="height:68px;justify-content:center;font-size:15px;font-weight:700;flex-direction:column;gap:2px;" onclick="toggleWorkoutPart('chest')"><span>胸</span><span id="workoutMeta-chest" style="font-size:10px;font-weight:600;opacity:.9;">未</span><span id="workoutDate-chest" style="font-size:11px;font-weight:500;opacity:.85;">--</span></button>
+        <button type="button" id="workoutBtn-biceps" class="act-btn" style="height:68px;justify-content:center;font-size:15px;font-weight:700;flex-direction:column;gap:2px;" onclick="toggleWorkoutPart('biceps')"><span>二頭</span><span id="workoutMeta-biceps" style="font-size:10px;font-weight:600;opacity:.9;">未</span><span id="workoutDate-biceps" style="font-size:11px;font-weight:500;opacity:.85;">--</span></button>
+        <button type="button" id="workoutBtn-triceps" class="act-btn" style="height:68px;justify-content:center;font-size:15px;font-weight:700;flex-direction:column;gap:2px;" onclick="toggleWorkoutPart('triceps')"><span>三頭</span><span id="workoutMeta-triceps" style="font-size:10px;font-weight:600;opacity:.9;">未</span><span id="workoutDate-triceps" style="font-size:11px;font-weight:500;opacity:.85;">--</span></button>
+        <button type="button" id="workoutBtn-shoulders" class="act-btn" style="height:68px;justify-content:center;font-size:15px;font-weight:700;flex-direction:column;gap:2px;" onclick="toggleWorkoutPart('shoulders')"><span>肩</span><span id="workoutMeta-shoulders" style="font-size:10px;font-weight:600;opacity:.9;">未</span><span id="workoutDate-shoulders" style="font-size:11px;font-weight:500;opacity:.85;">--</span></button>
+        <button type="button" id="workoutBtn-back" class="act-btn" style="height:68px;justify-content:center;font-size:15px;font-weight:700;flex-direction:column;gap:2px;" onclick="toggleWorkoutPart('back')"><span>背中</span><span id="workoutMeta-back" style="font-size:10px;font-weight:600;opacity:.9;">未</span><span id="workoutDate-back" style="font-size:11px;font-weight:500;opacity:.85;">--</span></button>
+      </div>
+      <div style="margin-top:14px;padding:12px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);font-size:12px;color:var(--text2);line-height:1.8;">
+        目的：トレーニング部位の重複を防ぎながら、最短で全身を回せるようにするための記録です。
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL: 食品登録 -->
@@ -636,7 +672,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 <div class="toast" id="toast"></div>
 
 <script>
-let S = { date: todayStr(), logs:{}, foods:[], goals:{cal:2200,prot:130}, dayTypes:{}, weights:{}, weightHistory:{}, deficit:{target:28800,burnTrain:2700,burnOff:2400} };
+let S = { date: todayStr(), logs:{}, foods:[], goals:{cal:2200,prot:130}, dayTypes:{}, weights:{}, weightHistory:{}, workoutHistory:{}, workoutUndo:{}, deficit:{target:28800,burnTrain:2700,burnOff:2400} };
 const EMOJIS = ['🍚','🍗','🥩','🐟','🥛','🥚','🥦','🥕','🍌','🍎','🍞','🧀','🥜','🍜','🥗','🍱','🍙','🥙','🌮','🍳','☕','🧃','🥤','🍫','🍪','🫘','🦐','🥑','🫐','💪','🌾','🍡'];
 let selEmoji='🍚', pendingFood=null, pendingQty=1;
 let selectedFoodCategory='food';
@@ -1168,7 +1204,10 @@ function renderLog(){
         +'<div class="log-sub">'+l.time+'</div>'
         +'</div>'
         +'<div class="log-nums"><div class="log-cal">'+l.tmpCal+' kcal</div><div class="log-prot">'+l.tmpProt+'g</div></div>'
+        +'<div class="log-actions">'
+        +'<button class="mini-btn green" onclick="promoteTempLog(\''+l.id+'\')">リスト化</button>'
         +'<button class="del-btn" onclick="delLog(\''+l.id+'\')">×</button>'
+        +'</div>'
         +'</div>';
     }
     const f=S.foods.find(f=>f.id===l.fid); if(!f)return'';
@@ -1180,6 +1219,26 @@ function renderLog(){
       +'<button class="del-btn" onclick="delLog(\''+l.id+'\')">×</button>'
       +'</div>';
   }).join('');
+}
+function promoteTempLog(logId){
+  const logs=S.logs[S.date]||[];
+  const log=logs.find(x=>x.id===logId && x.tmpName);
+  if(!log){
+    showToast('対象の記録が見つかりません');
+    return;
+  }
+  const exists=S.foods.some(f=>f.name.trim()===log.tmpName.trim() && Number(f.cal)===Number(log.tmpCal) && Number(f.prot)===Number(log.tmpProt));
+  if(exists){
+    showToast('同じ内容の食品がすでにあります');
+    return;
+  }
+  const category=isAlcoholFood({name:log.tmpName}) ? 'alcohol' : 'food';
+  const emoji=category==='alcohol' ? '🍺' : '🍽️';
+  S.foods.push({id:uid(),name:log.tmpName,emoji,cal:Number(log.tmpCal)||0,prot:Number(log.tmpProt)||0,category});
+  save();
+  renderLog();
+  renderFoods();
+  showToast('食品リストに追加しました ✓');
 }
 function delLog(id){ S.logs[S.date]=(S.logs[S.date]||[]).filter(l=>l.id!==id); renderLog();renderChart();save();showToast('削除しました'); }
 
@@ -1344,7 +1403,7 @@ function importData(event){
   };
   reader.readAsText(file, 'utf-8');
 }
-function confirmClear(){ if(confirm('全データを削除しますか？この操作は元に戻せません。')){ S.logs={};S.foods=[];S.dayTypes={};S.weights={};S.weightHistory={}; save();renderLog();renderWeightPage();renderFoods();showToast('削除しました'); } }
+function confirmClear(){ if(confirm('全データを削除しますか？この操作は元に戻せません。')){ S.logs={};S.foods=[];S.dayTypes={};S.weights={};S.weightHistory={};S.workoutHistory={}; save();renderLog();renderWeightPage();renderWorkoutPage();renderFoods();showToast('削除しました'); } }
 
 // Modal
 function openModal(id){ document.getElementById(id).classList.add('open'); }
@@ -1352,15 +1411,220 @@ function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 function overlayClose(id,e){ if(e.target===document.getElementById(id))closeModal(id); }
 
 // Nav
-function switchPage(name){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active')); document.getElementById('page-'+name).classList.add('active'); document.getElementById('nav-'+name).classList.add('active'); if(name==='log')renderLog(); if(name==='weight')renderWeightPage(); if(name==='foods')renderFoods(); if(name==='goals')renderGoals(); }
+function switchPage(name){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active')); document.getElementById('page-'+name).classList.add('active'); document.getElementById('nav-'+name).classList.add('active'); if(name==='log')renderLog(); if(name==='weight')renderWeightPage(); if(name==='workout')renderWorkoutPage(); if(name==='foods')renderFoods(); if(name==='goals')renderGoals(); }
 
 
 // Default foods
 function addDefaults(){ if(S.foods.length)return; [{name:'完全栄養食',emoji:'🍫',cal:400,prot:30,category:'food'},{name:'ゆで卵',emoji:'🥚',cal:75,prot:7,category:'food'},{name:'プロテイン',emoji:'💪',cal:110,prot:21,category:'food'},{name:'あんぱん',emoji:'🍞',cal:185,prot:4.7,category:'food'},{name:'ドデカミン',emoji:'🥤',cal:78,prot:0,category:'food'},{name:'牛丼 小盛',emoji:'🍚',cal:507,prot:13.1,category:'food'},{name:'牛丼 並盛',emoji:'🍚',cal:687,prot:17.1,category:'food'},{name:'完全栄養食(ブラックエディション)',emoji:'🍫',cal:400,prot:40,category:'food'},{name:'羊羹(ファミマ)',emoji:'🍡',cal:166,prot:2,category:'food'},{name:'オートミール',emoji:'🌾',cal:144,prot:3.5,category:'food'},{name:'春雨スープ',emoji:'🍜',cal:40,prot:1,category:'food'},{name:'生ビール（中ジョッキ）',emoji:'🍺',cal:200,prot:0,category:'alcohol'},{name:'ハイボール(ジョッキ)',emoji:'🥃',cal:100,prot:0,category:'alcohol'},{name:'ストロングゼロ500ml',emoji:'🥫',cal:270,prot:0,category:'alcohol'},{name:'ストロングゼロ350ml',emoji:'🥫',cal:189,prot:0,category:'alcohol'},{name:'角ハイボール 500ml',emoji:'🥃',cal:240,prot:0,category:'alcohol'},{name:'角ハイボール 350ml',emoji:'🥃',cal:168,prot:0,category:'alcohol'},{name:'キリン一番搾り 糖質ゼロ 500ml',emoji:'🍺',cal:145,prot:0,category:'alcohol'},{name:'キリン一番搾り 糖質ゼロ 350ml',emoji:'🍺',cal:101,prot:0,category:'alcohol'}].forEach(d=>S.foods.push({id:uid(),...d})); }
 
+// Workout
+const WORKOUT_PARTS = ['legs','chest','biceps','triceps','shoulders','back'];
+const WORKOUT_LABELS = { legs:'脚', chest:'胸', biceps:'二頭', triceps:'三頭', shoulders:'肩', back:'背中' };
+function shortDateLabel(dateStr){
+  const d=parseLocalDate(dateStr);
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+function getWorkoutDaily(date=S.date){
+  if(!S.workoutHistory) S.workoutHistory={};
+  return Array.isArray(S.workoutHistory[date]) ? [...S.workoutHistory[date]] : [];
+}
+function setWorkoutDaily(parts,date=S.date){
+  if(!S.workoutHistory) S.workoutHistory={};
+  const unique=[...new Set(parts.filter(Boolean))];
+  if(unique.length) S.workoutHistory[date]=unique;
+  else delete S.workoutHistory[date];
+}
+function pushWorkoutUndo(date=S.date, snapshot=[]){
+  if(!S.workoutUndo) S.workoutUndo={};
+  if(!Array.isArray(S.workoutUndo[date])) S.workoutUndo[date]=[];
+  S.workoutUndo[date].push([...snapshot]);
+  if(S.workoutUndo[date].length>20) S.workoutUndo[date]=S.workoutUndo[date].slice(-20);
+}
+function getWorkoutUndoCount(date=S.date){
+  if(!S.workoutUndo || !Array.isArray(S.workoutUndo[date])) return 0;
+  return S.workoutUndo[date].length;
+}
+function undoWorkoutAction(){
+  if(!S.workoutUndo || !Array.isArray(S.workoutUndo[S.date]) || !S.workoutUndo[S.date].length){
+    showToast('取り消せる操作がありません');
+    return;
+  }
+  const prev=S.workoutUndo[S.date].pop();
+  setWorkoutDaily(prev, S.date);
+  if(!S.workoutUndo[S.date].length) delete S.workoutUndo[S.date];
+  save();
+  renderWorkoutPage();
+  showToast('直前の操作を取り消しました');
+}
+function clearWorkoutToday(){
+  const current=getWorkoutDaily(S.date);
+  if(!current.length){
+    showToast('今日の選択はありません');
+    return;
+  }
+  pushWorkoutUndo(S.date, current);
+  setWorkoutDaily([], S.date);
+  save();
+  renderWorkoutPage();
+  showToast('今日の選択をクリアしました');
+}
+function getWorkoutCycleState(targetDate=S.date){
+  if(!S.workoutHistory) S.workoutHistory={};
+  const dates=Object.keys(S.workoutHistory)
+    .filter(date => date <= targetDate)
+    .sort((a,b)=>a.localeCompare(b));
+
+  let carried = [];
+  let carriedSet = new Set();
+  let todaySelections = [];
+  let completedOnTarget = false;
+
+  dates.forEach(date => {
+    const daily=getWorkoutDaily(date);
+    daily.forEach(part => {
+      if(!carriedSet.has(part)){
+        carriedSet.add(part);
+        carried.push(part);
+      }
+    });
+
+    const reachedComplete = carriedSet.size >= WORKOUT_PARTS.length;
+
+    if(date === targetDate){
+      if(reachedComplete){
+        todaySelections = [];
+        carried = [];
+        carriedSet = new Set();
+        completedOnTarget = true;
+      }else{
+        todaySelections = [...daily];
+        completedOnTarget = false;
+      }
+    }else if(reachedComplete){
+      carried = [];
+      carriedSet = new Set();
+    }
+  });
+
+  const lockedParts = carried.filter(part => !todaySelections.includes(part));
+  return {
+    selectedParts: carried,
+    todaySelections,
+    lockedParts,
+    completedOnTarget
+  };
+}
+function getWorkoutLastDate(part, targetDate=S.date){
+  if(!S.workoutHistory) S.workoutHistory={};
+  const dates=Object.keys(S.workoutHistory)
+    .filter(date => date <= targetDate)
+    .sort((a,b)=>b.localeCompare(a));
+  for(const date of dates){
+    const daily=getWorkoutDaily(date);
+    if(daily.includes(part)) return date;
+  }
+  return null;
+}
+function toggleWorkoutPart(part){
+  const state=getWorkoutCycleState(S.date);
+  if(state.lockedParts.includes(part)){
+    showToast('この部位は前日までに記録済みです');
+    return;
+  }
+  const today=[...state.todaySelections];
+  pushWorkoutUndo(S.date, today);
+  const idx=today.indexOf(part);
+  if(idx>=0){
+    today.splice(idx,1);
+    setWorkoutDaily(today);
+    save();
+    renderWorkoutPage();
+    return;
+  }
+  today.push(part);
+  setWorkoutDaily(today);
+  const nextState=getWorkoutCycleState(S.date);
+  save();
+  renderWorkoutPage();
+  if(nextState.completedOnTarget){
+    showToast('全部位完了で次回分にリセットしました ✓');
+  }
+}
+function renderWorkoutPage(){
+  const state=getWorkoutCycleState(S.date);
+  const selected=state.selectedParts;
+  const todaySelected=state.todaySelections;
+  const dateLabel=document.getElementById('workoutDateLabel');
+  const status=document.getElementById('workoutStatus');
+  const undoBtn=document.getElementById('workoutUndoBtn');
+  const clearBtn=document.getElementById('workoutClearTodayBtn');
+  if(dateLabel) dateLabel.textContent=fmtDate(S.date);
+  if(status){
+    if(state.completedOnTarget){
+      status.textContent='この日で全6部位達成。次回分はリセットされます';
+    } else if(selected.length){
+      status.textContent='進行中: ' + selected.map(p=>WORKOUT_LABELS[p]).join(' / ');
+    } else {
+      status.textContent='まだ部位が選択されていません';
+    }
+  }
+  if(undoBtn){
+    const canUndo=getWorkoutUndoCount(S.date)>0;
+    undoBtn.disabled=!canUndo;
+    undoBtn.style.opacity=canUndo?'1':'0.45';
+    undoBtn.style.cursor=canUndo?'pointer':'not-allowed';
+  }
+  if(clearBtn){
+    const hasToday=todaySelected.length>0;
+    clearBtn.disabled=!hasToday;
+    clearBtn.style.opacity=hasToday?'1':'0.45';
+    clearBtn.style.cursor=hasToday?'pointer':'not-allowed';
+  }
+  WORKOUT_PARTS.forEach(part=>{
+    const btn=document.getElementById('workoutBtn-'+part);
+    const metaChip=document.getElementById('workoutMeta-'+part);
+    const dateChip=document.getElementById('workoutDate-'+part);
+    if(!btn) return;
+    const isToday=todaySelected.includes(part);
+    const locked=state.lockedParts.includes(part);
+    const active=selected.includes(part);
+    const lastDate=getWorkoutLastDate(part, S.date);
+    if(metaChip){
+      metaChip.textContent = isToday ? '今日' : (locked || active) ? '済' : '未';
+      metaChip.style.color = isToday ? '#fecaca' : (locked || active) ? '#fdba74' : 'var(--text2)';
+    }
+    if(dateChip){
+      dateChip.textContent = lastDate ? shortDateLabel(lastDate) : '--';
+      dateChip.style.color = isToday ? 'rgba(255,235,235,.96)' : (locked || active) ? '#fdba74' : 'var(--text2)';
+    }
+    if(isToday){
+      btn.style.borderColor = 'rgba(248,113,113,.72)';
+      btn.style.background = 'rgba(248,113,113,.18)';
+      btn.style.color = '#fecaca';
+      btn.style.boxShadow = '0 0 0 1px rgba(248,113,113,.12) inset';
+    }else if(locked || active){
+      btn.style.borderColor = 'rgba(251,146,60,.30)';
+      btn.style.background = 'rgba(251,146,60,.05)';
+      btn.style.color = '#fdba74';
+      btn.style.boxShadow = 'none';
+    }else{
+      btn.style.borderColor = 'var(--border2)';
+      btn.style.background = 'var(--surface)';
+      btn.style.color = 'var(--text3)';
+      btn.style.boxShadow = 'none';
+    }
+    btn.style.opacity = '1';
+    btn.style.cursor = locked ? 'not-allowed' : 'pointer';
+    btn.classList.remove('green');
+  });
+}
+
 // Init
-load(); addDefaults(); ensureAlcoholDefaults();
-renderDate(); renderLog(); renderWeightPage(); renderGoals(); renderFoods();
+load();
+S.date = todayStr();
+addDefaults();
+ensureAlcoholDefaults();
+renderDate(); renderLog(); renderWeightPage(); renderWorkoutPage(); renderGoals(); renderFoods();
 </script>
 </body>
 </html>
