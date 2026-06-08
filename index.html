@@ -178,6 +178,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
   display:flex;align-items:center;padding:0 10px;gap:4px;}
 .act-btn.green{color:var(--green);border-color:rgba(168,255,110,.3);background:rgba(168,255,110,.06);}
 .act-btn.red{color:var(--danger);}
+.act-btn.edit{color:var(--teal);border-color:rgba(94,234,212,.28);background:rgba(94,234,212,.08);}
 
 /* GOALS PAGE */
 .goals-wrap{padding:0 16px;}
@@ -579,6 +580,27 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
   </div>
 </div>
 
+<!-- MODAL: 食品編集 -->
+<div class="overlay" id="mEditFood" onclick="overlayClose('mEditFood',event)">
+  <div class="sheet">
+    <div class="handle"></div>
+    <div class="step-badge">EDIT — 食品情報を修正</div>
+    <div class="sheet-title">食品を編集</div>
+    <div class="sheet-field"><div class="sheet-label">食品名</div>
+      <input class="sheet-input" id="editFoodName" placeholder="食品名"></div>
+    <div class="sheet-row">
+      <div class="sheet-field"><div class="sheet-label">カロリー (kcal)</div>
+        <input class="sheet-input" id="editFoodCal" type="number" inputmode="decimal" placeholder="0"></div>
+      <div class="sheet-field"><div class="sheet-label">タンパク質 (g)</div>
+        <input class="sheet-input" id="editFoodProt" type="number" inputmode="decimal" placeholder="0"></div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" onclick="closeModal('mEditFood')">キャンセル</button>
+      <button class="btn-ok" onclick="saveEditedFood()">保存する ✓</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: 食品登録 -->
 <div class="overlay" id="mAddFood" onclick="overlayClose('mAddFood',event)">
   <div class="sheet">
@@ -675,6 +697,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 let S = { date: todayStr(), logs:{}, foods:[], goals:{cal:2200,prot:130}, dayTypes:{}, weights:{}, weightHistory:{}, workoutHistory:{}, workoutUndo:{}, deficit:{target:28800,burnTrain:2700,burnOff:2400} };
 const EMOJIS = ['🍚','🍗','🥩','🐟','🥛','🥚','🥦','🥕','🍌','🍎','🍞','🧀','🥜','🍜','🥗','🍱','🍙','🥙','🌮','🍳','☕','🧃','🥤','🍫','🍪','🫘','🦐','🥑','🫐','💪','🌾','🍡'];
 let selEmoji='🍚', pendingFood=null, pendingQty=1;
+let editingFoodId=null;
 let selectedFoodCategory='food';
 let storageAvailable=true;
 let bulkQtyMap={};
@@ -1340,7 +1363,7 @@ function renderFoods(){
     el.innerHTML='<div class="empty"><span class="empty-ico">🥗</span>食品が登録されていません<br>上の緑のバナーから追加！</div>';
     return;
   }
-  const renderFoodItem=(f)=>'<div class="food-item"><div class="food-emoji">'+f.emoji+'</div><div class="food-info"><div class="food-name">'+f.name+'</div><div class="food-macro">'+f.cal+' kcal ／ タンパク質 '+f.prot+'g ・ 使用 '+getFoodUseCount(f.id)+'回</div></div><div class="food-acts"><button class="act-btn green" onclick="quickLog(\''+f.id+'\')">+ 記録</button><button class="act-btn red" onclick="delFood(\''+f.id+'\')">×</button></div></div>';
+  const renderFoodItem=(f)=>'<div class="food-item"><div class="food-emoji">'+f.emoji+'</div><div class="food-info"><div class="food-name">'+f.name+'</div><div class="food-macro">'+f.cal+' kcal ／ タンパク質 '+f.prot+'g ・ 使用 '+getFoodUseCount(f.id)+'回</div></div><div class="food-acts"><button class="act-btn green" onclick="quickLog(\''+f.id+'\')">+ 記録</button><button class="act-btn edit" onclick="openEditFood(\''+f.id+'\')">編集</button><button class="act-btn red" onclick="delFood(\''+f.id+'\')">×</button></div></div>';
   const normalHtml=normalFoods.map(renderFoodItem).join('');
   const alcoholHtml=alcoholFoods.length ? '<div class="group-card">'
     +'<div class="group-head" onclick="toggleAlcoholFoodGroup()">'
@@ -1355,6 +1378,36 @@ function renderFoods(){
 function toggleAlcoholFoodGroup(){ alcoholFoodExpanded=!alcoholFoodExpanded; renderFoods(); }
 function quickLog(fid){ switchPage('log'); setTimeout(()=>openQty(fid),100); }
 function delFood(id){ if(!confirm('この食品を削除しますか？'))return; S.foods=S.foods.filter(f=>f.id!==id); renderFoods();save();showToast('削除しました'); }
+function openEditFood(id){
+  const food=S.foods.find(f=>f.id===id);
+  if(!food) return;
+  editingFoodId=id;
+  document.getElementById('editFoodName').value=food.name||'';
+  document.getElementById('editFoodCal').value=food.cal ?? '';
+  document.getElementById('editFoodProt').value=food.prot ?? '';
+  openModal('mEditFood');
+}
+function saveEditedFood(){
+  if(!editingFoodId) return;
+  const food=S.foods.find(f=>f.id===editingFoodId);
+  if(!food) return;
+  const name=document.getElementById('editFoodName').value.trim();
+  const cal=parseFloat(document.getElementById('editFoodCal').value)||0;
+  const prot=parseFloat(document.getElementById('editFoodProt').value)||0;
+  if(!name){
+    document.getElementById('editFoodName').focus();
+    return;
+  }
+  food.name=name;
+  food.cal=cal;
+  food.prot=prot;
+  food.category=isAlcoholFood(food)?'alcohol':'food';
+  save();
+  closeModal('mEditFood');
+  renderFoods();
+  renderLog();
+  showToast('食品情報を更新しました ✓');
+}
 
 // Add Food
 function openAddFood(){ document.getElementById('fName').value=''; document.getElementById('fCal').value=''; document.getElementById('fProt').value=''; selEmoji='🍚'; selectedFoodCategory='food'; renderEmojiGrid(); updateFoodCategoryButtons(); openModal('mAddFood'); setTimeout(()=>document.getElementById('fName').focus(),350); }
