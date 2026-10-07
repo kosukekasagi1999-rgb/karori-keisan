@@ -665,13 +665,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 
 <!-- MODAL: 記録追加 -->
 <div class="overlay" id="mAddLog" onclick="overlayClose('mAddLog',event)">
-  <div class="sheet">
+  <div class="sheet" aria-label="食事の追加">
     <div class="handle"></div>
-    <div class="step-badge">食事を記録</div>
-    <div class="sheet-title">何を食べましたか？</div>
     <!-- 一時記録 -->
     <div style="margin-bottom:18px">
-      <div style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">⚡ その場限りで記録（リスト登録なし）</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <input class="sheet-input" id="tmpName" placeholder="食品名（例: メロンパン）" autocomplete="off">
         <div style="display:flex;gap:8px">
@@ -682,7 +679,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
       </div>
     </div>
     <div class="sheet-label">登録済みの食品から選ぶ</div>
-    <div id="logFoodList" style="max-height:42svh;overflow-y:auto;padding-bottom:4px"></div>
+    <div id="logFoodList" style="padding-bottom:4px"></div>
     <div id="logNoFood" style="display:none;text-align:center;padding:20px 0;color:var(--text2);font-size:13px;line-height:2.2">
       <div style="font-size:36px;margin-bottom:8px;opacity:.3">🥗</div>
       食品が登録されていません<br>
@@ -1576,6 +1573,7 @@ function openAddLog(){
   renderLogList();
   updateBulkSummary();
   openModal('mAddLog');
+  document.querySelector('#mAddLog .sheet').scrollTop=0;
 }
 function renderLogList(){
   const filtered=S.foods;

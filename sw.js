@@ -1,5 +1,5 @@
 // Change VERSION whenever the app shell changes.
-const VERSION = 'nutrilog-20261007-quick-log-1';
+const VERSION = 'nutrilog-20261007-meal-sheet-1';
 const PREFIX = 'nutrilog-shell-' + self.registration.scope;
 const CACHE = PREFIX + VERSION;
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
