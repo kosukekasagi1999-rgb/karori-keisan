@@ -667,17 +667,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 <div class="overlay" id="mAddLog" onclick="overlayClose('mAddLog',event)">
   <div class="sheet">
     <div class="handle"></div>
-    <div class="step-badge">STEP 1 — まとめて選ぶ</div>
+    <div class="step-badge">食事を記録</div>
     <div class="sheet-title">何を食べましたか？</div>
-    <input class="sheet-input" id="logSearch" placeholder="🔍  食品名で絞り込み…" oninput="renderLogList()" autocomplete="off" style="margin-bottom:14px">
-    <div id="logFoodList" style="max-height:42svh;overflow-y:auto;padding-bottom:4px"></div>
-    <div id="logNoFood" style="display:none;text-align:center;padding:20px 0;color:var(--text2);font-size:13px;line-height:2.2">
-      <div style="font-size:36px;margin-bottom:8px;opacity:.3">🥗</div>
-      食品が登録されていません<br>
-      <span style="color:var(--teal);cursor:pointer;font-weight:600" onclick="closeModal('mAddLog');switchPage('foods')">「食品タブ」で追加する →</span>
-    </div>
     <!-- 一時記録 -->
-    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+    <div style="margin-bottom:18px">
       <div style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">⚡ その場限りで記録（リスト登録なし）</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <input class="sheet-input" id="tmpName" placeholder="食品名（例: メロンパン）" autocomplete="off">
@@ -687,6 +680,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
         </div>
         <button class="btn-ok" style="width:100%;margin-top:2px" onclick="logOneTime()">この内容で記録する →</button>
       </div>
+    </div>
+    <div class="sheet-label">登録済みの食品から選ぶ</div>
+    <div id="logFoodList" style="max-height:42svh;overflow-y:auto;padding-bottom:4px"></div>
+    <div id="logNoFood" style="display:none;text-align:center;padding:20px 0;color:var(--text2);font-size:13px;line-height:2.2">
+      <div style="font-size:36px;margin-bottom:8px;opacity:.3">🥗</div>
+      食品が登録されていません<br>
+      <span style="color:var(--teal);cursor:pointer;font-weight:600" onclick="closeModal('mAddLog');switchPage('foods')">「食品タブ」で追加する →</span>
     </div>
     <div class="bulk-footer">
       <div class="bulk-summary">
@@ -1570,7 +1570,6 @@ function delLog(id){ id=decodeURIComponent(id); S.logs[S.date]=(S.logs[S.date]||
 // Add Log
 function openAddLog(){
   bulkQtyMap=Object.create(null);
-  document.getElementById('logSearch').value='';
   document.getElementById('tmpName').value='';
   document.getElementById('tmpCal').value='';
   document.getElementById('tmpProt').value='';
@@ -1579,8 +1578,7 @@ function openAddLog(){
   openModal('mAddLog');
 }
 function renderLogList(){
-  const q=document.getElementById('logSearch').value.toLowerCase();
-  const filtered=S.foods.filter(f=>f.name.toLowerCase().includes(q));
+  const filtered=S.foods;
   const normalFoods=sortFoodsByUsage(filtered.filter(f=>!isAlcoholFood(f)));
   const alcoholFoods=sortFoodsByUsage(filtered.filter(isAlcoholFood));
   const el=document.getElementById('logFoodList'); const noEl=document.getElementById('logNoFood');
