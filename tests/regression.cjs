@@ -6,9 +6,9 @@ assert.equal(new Set(ids).size,ids.length,'duplicate static IDs');
 const functions=[...code.matchAll(/^function (\w+)\(/gm)].map(x=>x[1]);assert.equal(new Set(functions).size,functions.length,'duplicate functions');
 for(const m of code.matchAll(/getElementById\('([^']+)'\)/g))assert.ok(ids.includes(m[1]),'missing ID '+m[1]);
 const elements=new Map(),storage={},alerts=[];let failStorage=false;
-function el(id){if(!elements.has(id))elements.set(id,{value:'',textContent:'',innerHTML:'',focus(){},click(){},style:{},querySelector:()=>el(id+'span'),classList:{add(){},remove(){},toggle(){},contains(){return true}},parentElement:{clientWidth:390},getContext(){return new Proxy({},{get:()=>()=>{}})}});return elements.get(id)}
+function el(id){if(!elements.has(id))elements.set(id,{value:'',textContent:'',innerHTML:'',focus(){},click(){},scrollTop:0,scrollTo({top}){this.scrollTop=top;},setAttribute(){},style:{},querySelector:()=>el(id+'span'),classList:{add(){},remove(){},toggle(){},contains(){return true}},parentElement:{clientWidth:390},getContext(){return new Proxy({},{get:()=>()=>{}})}});return elements.get(id)}
 class Reader{readAsText(file){this.result=file.text;this.onload();}}
-const ctx=vm.createContext({console,Date,Math,Set,Number,String,Object,Array,JSON,Blob,encodeURIComponent,decodeURIComponent,setTimeout(){},FileReader:Reader,localStorage:{getItem:k=>storage[k]||null,setItem:(k,v)=>{if(failStorage)throw Error('quota');storage[k]=v}},document:{getElementById:el,querySelectorAll:()=>[]},window:{devicePixelRatio:1,addEventListener(){}},navigator:{},location:{protocol:'http:'},confirm:()=>true,alert:m=>alerts.push(m)});
+const ctx=vm.createContext({console,Date,Math,Set,Number,String,Object,Array,JSON,Blob,encodeURIComponent,decodeURIComponent,setTimeout(){},requestAnimationFrame:fn=>fn(),FileReader:Reader,localStorage:{getItem:k=>storage[k]||null,setItem:(k,v)=>{if(failStorage)throw Error('quota');storage[k]=v}},document:{getElementById:el,querySelectorAll:()=>[]},window:{devicePixelRatio:1,addEventListener(){},matchMedia(){return {matches:false}}},navigator:{},location:{protocol:'http:'},confirm:()=>true,alert:m=>alerts.push(m)});
 new vm.Script(code);vm.runInContext(code,ctx);const run=s=>vm.runInContext(s,ctx);const json=s=>JSON.parse(run('JSON.stringify('+s+')'));
 let passed=0;function test(name,body){run("S=freshState();S.date='2026-10-07';unreadableStorage=false;");body();passed++;console.log('PASS '+name);}
 test('food deletion retains historical totals and rows',()=>{run("S.foods=[{id:'f',name:'Egg',emoji:'x',cal:400,prot:30}];S.logs[S.date]=[{id:'l',fid:'f',qty:1,time:'12:00'}];S.dayTypes[S.date]='train';delFood('f')");assert.deepEqual(json('getTotals()'),{cal:400,prot:30});assert.equal(run('calcTotalDeficit()'),2300);assert.match(el('logList').innerHTML,/Egg/);});
@@ -30,8 +30,44 @@ test('HTML in names rendered only as text',()=>{run("S.foods=[{id:'f',name:'<img
 test('invalid numbers rejected before food/weight mutation',()=>{el('fName').value='bad';el('fCal').value='-1';el('fProt').value='3';run('saveFood()');assert.equal(run('S.foods.length'),0);el('weightInput').value='999999';run('saveWeight()');assert.deepEqual(json('S.weightHistory'),{});});
 test('valid backup roundtrip and partial legacy format',()=>{run("S.weights={'2026-10-01':75};S.foods=[{id:'f',name:'x',emoji:'x',cal:100,prot:1}]");assert.equal(run('validateState(parseBackup(JSON.stringify(S))).foods.length'),1);assert.equal(run("validateState({weights:{'2026-10-01':75},goals:{cal:2000}}).goals.prot"),130);});
 test('bad JSON/schema leaves memory and stored backup untouched',()=>{run('save()');const before=storage.nlog3;el('importJson').value='x';run("importData({target:{files:[{text:'{\"logs\":null}'}],value:'x'}})");assert.equal(storage.nlog3,before);assert.deepEqual(json('S.logs'),{});assert.match(alerts.at(-1),/失敗/);assert.throws(()=>run("parseBackup('{\"__proto__\":{}}')"));});
-test('valid import refreshes all pages and adds defaults',()=>{const backup=run('JSON.stringify(S)');ctx.testBackup=backup;run("importData({target:{files:[{text:testBackup}],value:'x'}})");assert.equal(run('S.foods.length'),8);assert.equal(run('unreadableStorage'),false);});
+test('valid import refreshes all pages and adds defaults',()=>{const backup=run('JSON.stringify(S)');ctx.testBackup=backup;run("importData({target:{files:[{text:testBackup}],value:'x'}})");assert.equal(run('S.foods.length'),9);assert.equal(run('S.foods.filter(isGramFood).length'),1);assert.equal(run('unreadableStorage'),false);});
 test('storage failure during import rolls back memory',()=>{run('S.goals.cal=2000;save()');const before=storage.nlog3;failStorage=true;run("importData({target:{files:[{text:JSON.stringify(freshState())}],value:'x'}})");failStorage=false;assert.equal(run('S.goals.cal'),2000);assert.equal(storage.nlog3,before);});
 test('old orphan logs are visible and excluded from deficit',()=>{run("S.logs[S.date]=[{id:'lost',fid:'missing',qty:1,time:'12:00'}];S.dayTypes[S.date]='train';renderLog()");assert.equal(run('calcTotalDeficit()'),0);assert.match(el('logList').innerHTML,/栄養値不明/);assert.match(el('todayDefLbl').textContent,/未集計/);assert.match(el('goalCalLbl').textContent,/栄養値不明/);});
 test('unreadable stored data is never automatically overwritten',()=>{storage.nlog3='{bad';run('load();addDefaults();ensureAlcoholDefaults();save()');assert.equal(storage.nlog3,'{bad');assert.equal(run('unreadableStorage'),true);});
+
+test('rice default migrates existing users without duplicates or lost IDs',()=>{
+  run("S.foods=[{id:'old-rice',name:'玄米',emoji:'🍚',cal:152,prot:2.8,category:'food'}];ensureRiceDefault();ensureRiceDefault()");
+  assert.equal(run('S.foods.length'),1);assert.equal(run('S.foods[0].id'),'old-rice');assert.equal(run('S.foods[0].baseGrams'),100);
+});
+test('gram picker starts at 100g and records 150g with scaled nutrition',()=>{
+  run("ensureRiceDefault();openGramPicker(safeId(S.foods[0].id));pickGrams(150);confirmGramPicker()");
+  assert.deepEqual(json('getTotals()'),{cal:228,prot:4.2});assert.equal(run('S.logs[S.date][0].qty'),1.5);assert.match(el('logList').innerHTML,/150g/);
+  assert.equal(run('S.logs[S.date][0].foodSnapshot.unit'),'g');
+});
+test('50g is half the base nutrition and stored in the existing qty format',()=>{
+  run("ensureRiceDefault();openGramPicker(safeId(S.foods[0].id));pickGrams(50);confirmGramPicker()");
+  assert.deepEqual(json('getTotals()'),{cal:76,prot:1.4});assert.equal(run('S.logs[S.date][0].qty'),0.5);
+});
+test('wheel scroll and keyboard select in 10g steps with safe boundaries',()=>{
+  run("ensureRiceDefault();openGramPicker(safeId(S.foods[0].id))");assert.equal(run('pendingGrams'),100);assert.equal(el('gramWheel').scrollTop,396);
+  el('gramWheel').scrollTop=14*44;run('syncGramWheel()');assert.equal(run('pendingGrams'),150);
+  run("onGramWheelKey({key:'ArrowDown',preventDefault(){}})");assert.equal(run('pendingGrams'),160);
+  run('pickGrams(-20)');assert.equal(run('pendingGrams'),10);run('pickGrams(9999)');assert.equal(run('pendingGrams'),2000);
+});
+test('bulk gram selection preserves other foods and counts a rice portion once',()=>{
+  run("ensureRiceDefault();S.foods.push({id:'egg',name:'卵',emoji:'🥚',cal:75,prot:7,category:'food'});bulkQtyMap=Object.create(null);bulkQtyMap.egg=2;openGramPicker(safeId(S.foods[0].id),'bulk');pickGrams(150);confirmGramPicker()");
+  assert.equal(el('bulkCount').textContent,3);assert.equal(el('bulkCal').textContent,378);assert.equal(el('bulkProt').textContent,'18.2g');
+  run('confirmBulkLog()');assert.deepEqual(json('getTotals()'),{cal:378,prot:18.2});assert.match(el('logList').innerHTML,/150g/);
+});
+test('cancelling the wheel and clearing rice leave other bulk selections intact',()=>{
+  run("ensureRiceDefault();bulkQtyMap=Object.create(null);bulkQtyMap.egg=2;openGramPicker(safeId(S.foods[0].id),'bulk');pickGrams(150);cancelGramPicker()");
+  assert.equal(run('bulkQtyMap[S.foods[0].id]'),undefined);assert.equal(run('bulkQtyMap.egg'),2);
+  run("openGramPicker(safeId(S.foods[0].id),'bulk');pickGrams(50);confirmGramPicker();clearBulkGrams(safeId(S.foods[0].id))");assert.equal(run('bulkQtyMap.egg'),2);
+});
+test('rice snapshots retain grams and totals after deletion and JSON roundtrip',()=>{
+  run("ensureRiceDefault();openGramPicker(safeId(S.foods[0].id));pickGrams(150);confirmGramPicker();delFood(safeId(S.foods[0].id));S=validateState(parseBackup(JSON.stringify(S)));renderLog()");
+  assert.deepEqual(json('getTotals()'),{cal:228,prot:4.2});assert.match(el('logList').innerHTML,/150g/);
+  assert.throws(()=>run("validateState({...S,foods:[{id:'bad',name:'bad',emoji:'x',cal:100,prot:1,unit:'g',baseGrams:0}]})"));
+});
+
 console.log(`${passed} regression checks passed; syntax, IDs and functions passed.`);

@@ -305,6 +305,24 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 .act-btn,.mini-btn{min-height:40px}
 #weightHistoryList{max-height:180px;overflow-y:auto;margin-bottom:10px}
 @media(max-width:420px){.food-item{flex-wrap:wrap}.food-acts{width:100%;justify-content:flex-end}}
+/* Gram picker: native momentum scrolling with a centered snap row. */
+.gram-picker-title{margin-bottom:8px}
+.gram-basis{font-size:12px;color:var(--text2);line-height:1.8;margin-bottom:14px}
+.gram-wheel-frame{position:relative;width:220px;margin:0 auto 14px;border-radius:16px;overflow:hidden;background:var(--surface)}
+.gram-wheel-frame::before{content:'';position:absolute;top:88px;left:12px;right:12px;height:44px;border-top:1px solid rgba(168,255,110,.4);border-bottom:1px solid rgba(168,255,110,.4);background:rgba(168,255,110,.06);pointer-events:none}
+.gram-wheel-frame::after{content:'';position:absolute;inset:0;background:linear-gradient(var(--surface),transparent 35%,transparent 65%,var(--surface));pointer-events:none}
+.gram-wheel{height:220px;overflow-y:auto;overscroll-behavior:contain;scroll-snap-type:y mandatory;padding:88px 0;-webkit-overflow-scrolling:touch;position:relative;scrollbar-width:none;outline:none}
+.gram-wheel:focus-visible{box-shadow:inset 0 0 0 2px var(--green)}
+.gram-option{display:flex;align-items:center;justify-content:center;width:100%;height:44px;scroll-snap-align:center;scroll-snap-stop:normal;border:0;background:transparent;font-family:var(--font);font-size:24px;font-weight:500;color:var(--text2);transform:scale(.85);cursor:pointer}
+.gram-option.is-selected{color:var(--green);font-size:28px;font-weight:700;transform:scale(1)}
+.gram-option small{font-size:14px;margin-left:8px}
+.gram-preview{text-align:center;font-size:15px;font-weight:600;line-height:1.8;color:var(--green);margin-bottom:16px;min-height:54px}
+.gram-preview small{display:block;font-size:12px;font-weight:400;color:var(--teal)}
+.gram-stepper{gap:6px}
+.gram-amount-btn{min-width:78px;justify-content:center;height:44px;color:var(--green)}
+.gram-clear-btn{width:34px;height:44px;border:0;background:none;color:var(--text2);font-size:18px;cursor:pointer}
+.gram-hint{text-align:center;font-size:12px;color:var(--text2);margin-bottom:12px}
+@media(prefers-reduced-motion:reduce){.gram-wheel{scroll-behavior:auto}}
 </style>
 </head>
 <body>
@@ -682,6 +700,25 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 </div>
 
 
+<!-- MODAL: グラム数 -->
+<div class="overlay" id="mGrams" onclick="cancelGramPicker(event)">
+  <div class="sheet">
+    <div class="handle"></div>
+    <div class="step-badge">10g単位で量を選ぶ</div>
+    <div class="sheet-title gram-picker-title" id="gramFoodTitle"></div>
+    <div class="gram-basis" id="gramBasis"></div>
+    <div class="gram-hint">上下に回して、中央の量を選んでください</div>
+    <div class="gram-wheel-frame">
+      <div class="gram-wheel" id="gramWheel" role="listbox" aria-label="食べた量（グラム）" tabindex="0" onscroll="syncGramWheel()" onkeydown="onGramWheelKey(event)"></div>
+    </div>
+    <div class="gram-preview" id="gramPreview" aria-live="polite" aria-atomic="true"></div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" onclick="cancelGramPicker()">キャンセル</button>
+      <button class="btn-ok" id="gramConfirmBtn" onclick="confirmGramPicker()">記録する ✓</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: 数量 -->
 <div class="overlay" id="mQty" onclick="overlayClose('mQty',event)">
   <div class="sheet">
@@ -708,6 +745,83 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);
 let S = { date: todayStr(), logs:{}, foods:[], goals:{cal:2200,prot:130}, dayTypes:{}, weights:{}, weightHistory:{}, workoutHistory:{}, workoutUndo:{}, deficit:{target:28800,burnTrain:2700,burnOff:2400} };
 const EMOJIS = ['🍚','🍗','🥩','🐟','🥛','🥚','🥦','🥕','🍌','🍎','🍞','🧀','🥜','🍜','🥗','🍱','🍙','🥙','🌮','🍳','☕','🧃','🥤','🍫','🍪','🫘','🦐','🥑','🫐','💪','🌾','🍡'];
 let selEmoji='🍚', pendingFood=null, pendingQty=1;
+let gramFoodId=null,gramPickerMode='single',pendingGrams=100,selectedGramOption=100;
+const GRAM_STEP=10,GRAM_MAX=2000,GRAM_ROW_HEIGHT=44;
+function isGramFood(food){return food.unit==='g'&&Number(food.baseGrams)>0;}
+function gramQuantity(food,qty){return Math.round(qty*food.baseGrams);}
+function foodBasisLabel(food){return isGramFood(food)?food.baseGrams+'gあたり ':'';}
+function foodQuantityLabel(food,qty){return isGramFood(food)?gramQuantity(food,qty)+'g　':qty>1?'×'+qty+'　':'';}
+function openGramPicker(fid,mode='single'){
+  const food=S.foods.find(food=>food.id===decodeURIComponent(fid));
+  if(!food||!isGramFood(food))return;
+  gramFoodId=food.id;gramPickerMode=mode;
+  pendingGrams=Math.max(GRAM_STEP,Math.min(GRAM_MAX,Math.round((mode==='bulk'&&bulkQtyMap[food.id]?gramQuantity(food,bulkQtyMap[food.id]):100)/GRAM_STEP)*GRAM_STEP));
+  selectedGramOption=pendingGrams;
+  document.getElementById('gramFoodTitle').textContent=food.emoji+' '+food.name;
+  document.getElementById('gramBasis').textContent=food.baseGrams+'gあたり '+food.cal+' kcal ／ タンパク質 '+food.prot+'g';
+  document.getElementById('gramConfirmBtn').textContent=mode==='bulk'?'この量を選ぶ ✓':'記録する ✓';
+  document.getElementById('gramWheel').innerHTML=Array.from({length:GRAM_MAX/GRAM_STEP},(_,i)=>{
+    const grams=(i+1)*GRAM_STEP;
+    return '<button type="button" class="gram-option'+(grams===pendingGrams?' is-selected':'')+'" role="option" tabindex="-1" aria-selected="'+(grams===pendingGrams)+'" id="gramOption-'+grams+'" onclick="pickGrams('+grams+')">'+grams+'<small>g</small></button>';
+  }).join('');
+  closeModal('mAddLog');openModal('mGrams');updateGramPreview();
+  requestAnimationFrame(()=>{document.getElementById('gramWheel').scrollTop=(pendingGrams/GRAM_STEP-1)*GRAM_ROW_HEIGHT;});
+}
+function updateGramPreview(){
+  const food=S.foods.find(food=>food.id===gramFoodId);
+  if(!food)return;
+  const ratio=pendingGrams/food.baseGrams;
+  const cal=Math.round(food.cal*ratio*10)/10,prot=Math.round(food.prot*ratio*10)/10;
+  document.getElementById('gramPreview').innerHTML=pendingGrams+'g ・ '+cal+' kcal<small>タンパク質 '+prot+'g</small>';
+  document.getElementById('gramWheel').setAttribute('aria-activedescendant','gramOption-'+pendingGrams);
+}
+function selectGramValue(grams){
+  const next=Math.max(GRAM_STEP,Math.min(GRAM_MAX,Math.round(grams/GRAM_STEP)*GRAM_STEP));
+  if(next!==selectedGramOption){
+    const previous=document.getElementById('gramOption-'+selectedGramOption);
+    const option=document.getElementById('gramOption-'+next);
+    if(previous){previous.classList.remove('is-selected');previous.setAttribute('aria-selected','false');}
+    if(option){option.classList.add('is-selected');option.setAttribute('aria-selected','true');}
+    selectedGramOption=next;
+  }
+  pendingGrams=next;updateGramPreview();
+}
+function syncGramWheel(){
+  if(!document.getElementById('mGrams').classList.contains('open'))return;
+  selectGramValue((Math.round(document.getElementById('gramWheel').scrollTop/GRAM_ROW_HEIGHT)+1)*GRAM_STEP);
+}
+function pickGrams(grams){
+  selectGramValue(grams);
+  document.getElementById('gramWheel').scrollTo({top:(pendingGrams/GRAM_STEP-1)*GRAM_ROW_HEIGHT,behavior:'instant'});
+}
+function onGramWheelKey(event){
+  const changes={ArrowUp:-GRAM_STEP,ArrowDown:GRAM_STEP,PageUp:-100,PageDown:100};
+  if(event.key in changes){event.preventDefault();pickGrams(pendingGrams+changes[event.key]);}
+  else if(event.key==='Home'||event.key==='End'){event.preventDefault();pickGrams(event.key==='Home'?GRAM_STEP:GRAM_MAX);}
+}
+function cancelGramPicker(event){
+  if(event&&event.target!==document.getElementById('mGrams'))return;
+  closeModal('mGrams');
+  if(gramPickerMode==='bulk')openModal('mAddLog');
+}
+function confirmGramPicker(){
+  const food=S.foods.find(food=>food.id===gramFoodId);
+  if(!food)return;
+  syncGramWheel();
+  const qty=Math.round((pendingGrams/food.baseGrams)*10000)/10000;
+  closeModal('mGrams');
+  if(gramPickerMode==='bulk'){
+    bulkQtyMap[food.id]=qty;
+    renderLogList();updateBulkSummary();openModal('mAddLog');
+  }else{
+    if(!S.logs[S.date])S.logs[S.date]=[];
+    const time=new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+    S.logs[S.date].push({id:uid(),fid:food.id,qty,time});
+    save();renderLog();showToast(pendingGrams+'gを記録しました ✓');
+  }
+}
+function clearBulkGrams(fid){delete bulkQtyMap[decodeURIComponent(fid)];renderLogList();updateBulkSummary();}
+
 let editingFoodId=null;
 let selectedFoodCategory='food';
 let storageAvailable=true;
@@ -739,7 +853,7 @@ function snapshotFoods(state){
   for(const logs of Object.values(state.logs)){
     for(const log of logs){
       const food=state.foods.find(food=>food.id===log.fid);
-      if(food)log.foodSnapshot={name:food.name,emoji:food.emoji,cal:food.cal,prot:food.prot,category:food.category};
+      if(food)log.foodSnapshot={name:food.name,emoji:food.emoji,cal:food.cal,prot:food.prot,category:food.category,...(isGramFood(food)?{unit:food.unit,baseGrams:food.baseGrams}:{})};
     }
   }
 }
@@ -759,7 +873,7 @@ function validateState(data,base=freshState()){
   check(date(s.date),'日付が不正です');
   check(Array.isArray(s.foods),'食品リストが不正です');
   const foodIds=new Set();
-  const food=f=>obj(f)&&typeof f.name==='string'&&f.name.trim()&&typeof f.emoji==='string'&&num(f.cal,0,20000)&&num(f.prot,0,2000)&&(!f.category||['food','alcohol'].includes(f.category));
+  const food=f=>obj(f)&&typeof f.name==='string'&&f.name.trim()&&typeof f.emoji==='string'&&num(f.cal,0,20000)&&num(f.prot,0,2000)&&(!f.category||['food','alcohol'].includes(f.category))&&(f.unit===undefined||(f.unit==='g'&&num(f.baseGrams,1,10000)));
   for(const f of s.foods){check(food(f)&&id(f.id)&&!foodIds.has(f.id),'食品の値またはIDが不正です');foodIds.add(f.id);}
   for(const key of ['logs','dayTypes','weights','weightHistory','workoutHistory','workoutUndo']){check(obj(s[key]),key+'の形式が不正です');for(const d of Object.keys(s[key]))check(date(d),key+'の日付が不正です');}
   const logIds=new Set();
@@ -879,7 +993,8 @@ const ALCOHOL_DEFAULTS = [
     "category": "alcohol"
   }
 ];
-const FOOD_DEFAULTS = [
+const RICE_DEFAULT={name:'玄米（炊飯後）',emoji:'🍚',cal:152,prot:2.8,category:'food',unit:'g',baseGrams:100};
+const FOOD_DEFAULTS = [RICE_DEFAULT,
   {
     "name": "完全栄養食",
     "emoji": "🍫",
@@ -959,6 +1074,13 @@ const FOOD_DEFAULTS = [
   }
 ];
 
+function ensureRiceDefault(persist=true){
+  const existing=S.foods.find(food=>food.name===RICE_DEFAULT.name||(['玄米','炊いた玄米'].includes(food.name)&&food.cal===152&&food.prot===2.8));
+  let changed=false;
+  if(!existing){S.foods.push({id:uid(),...RICE_DEFAULT});changed=true;}
+  else if(!isGramFood(existing)){existing.unit='g';existing.baseGrams=100;changed=true;}
+  if(changed&&persist)save();
+}
 function ensureAlcoholDefaults(persist=true){
   if(!Array.isArray(S.foods)) S.foods = [];
   const alcoholDefaults = ALCOHOL_DEFAULTS;
@@ -1417,7 +1539,7 @@ function renderLog(){
     const c=Math.round(f.cal*l.qty*10)/10, p=Math.round(f.prot*l.qty*10)/10;
     return '<div class="log-item">'
       +'<div class="log-emoji">'+escapeHtml(f.emoji)+'</div>'
-      +'<div class="log-info"><div class="log-name">'+escapeHtml(f.name)+'</div><div class="log-sub">'+(l.qty>1?'×'+l.qty+'　':'')+escapeHtml(l.time)+'</div></div>'
+      +'<div class="log-info"><div class="log-name">'+escapeHtml(f.name)+'</div><div class="log-sub">'+foodQuantityLabel(f,l.qty)+escapeHtml(l.time)+'</div></div>'
       +'<div class="log-nums"><div class="log-cal">'+c+' kcal</div><div class="log-prot">'+p+'g</div></div>'
       +'<button class="del-btn" onclick="delLog(\''+safeId(l.id)+'\')">×</button>'
       +'</div>';
@@ -1471,9 +1593,14 @@ function renderLogList(){
   }
   const renderBulkRow=(f)=>{
     const qty=bulkQtyMap[f.id]||0;
+    if(isGramFood(f))return '<div class="bulk-row">'
+      +'<div class="bulk-emoji">'+escapeHtml(f.emoji)+'</div>'
+      +'<div class="bulk-info"><div class="bulk-name">'+escapeHtml(f.name)+'</div><div class="bulk-mac">'+foodBasisLabel(f)+f.cal+' kcal ／ '+f.prot+'g</div></div>'
+      +'<div class="bulk-stepper gram-stepper"><button type="button" class="act-btn gram-amount-btn" onclick="openGramPicker(\''+safeId(f.id)+'\',\'bulk\')">'+(qty?gramQuantity(f,qty)+'g':'量を選ぶ')+'</button>'
+      +(qty?'<button type="button" class="gram-clear-btn" aria-label="玄米の選択を解除" onclick="clearBulkGrams(\''+safeId(f.id)+'\')">×</button>':'')+'</div></div>';
     return '<div class="bulk-row">'
       +'<div class="bulk-emoji">'+escapeHtml(f.emoji)+'</div>'
-      +'<div class="bulk-info"><div class="bulk-name">'+escapeHtml(f.name)+'</div><div class="bulk-mac">'+f.cal+' kcal ／ タンパク質 '+f.prot+'g ・ 使用 '+getFoodUseCount(f.id)+'回</div></div>'
+      +'<div class="bulk-info"><div class="bulk-name">'+escapeHtml(f.name)+'</div><div class="bulk-mac">'+foodBasisLabel(f)+f.cal+' kcal ／ タンパク質 '+f.prot+'g ・ 使用 '+getFoodUseCount(f.id)+'回</div></div>'
       +'<div class="bulk-stepper">'
       +'<button class="bulk-btn" onclick="changeBulkQty(\''+safeId(f.id)+'\',-1)">－</button>'
       +'<div class="bulk-qty" id="bulkQty-'+safeId(f.id)+'">'+qty+'</div>'
@@ -1505,7 +1632,7 @@ function updateBulkSummary(){
   Object.entries(bulkQtyMap).forEach(([fid,qty])=>{
     const f=S.foods.find(x=>x.id===fid);
     if(!f||!qty)return;
-    count+=qty; cal+=f.cal*qty; prot+=f.prot*qty;
+    count+=isGramFood(f)?1:qty; cal+=f.cal*qty; prot+=f.prot*qty;
   });
   document.getElementById('bulkCount').textContent=count;
   document.getElementById('bulkCal').textContent=Math.round(cal*10)/10;
@@ -1524,7 +1651,7 @@ function confirmBulkLog(){
 }
 
 // Qty
-function openQty(fid){ fid=decodeURIComponent(fid); const f=S.foods.find(f=>f.id===fid); if(!f)return; pendingFood=f;pendingQty=1; document.getElementById('qtyTitle').textContent=f.emoji+' '+f.name; updateQty(); closeModal('mAddLog'); setTimeout(()=>openModal('mQty'),120); }
+function openQty(fid){ fid=decodeURIComponent(fid); const f=S.foods.find(f=>f.id===fid); if(!f)return; if(isGramFood(f)){openGramPicker(safeId(fid));return;} pendingFood=f;pendingQty=1; document.getElementById('qtyTitle').textContent=f.emoji+' '+f.name; updateQty(); closeModal('mAddLog'); setTimeout(()=>openModal('mQty'),120); }
 function changeQty(d){ pendingQty=Math.min(1000,Math.max(0.5,pendingQty+d)); pendingQty=pendingQty>1?Math.round(pendingQty):Math.round(pendingQty*2)/2; updateQty(); }
 function updateQty(){ document.getElementById('qtyNum').textContent=pendingQty; if(pendingFood){ const c=Math.round(pendingFood.cal*pendingQty*10)/10; const p=Math.round(pendingFood.prot*pendingQty*10)/10; document.getElementById('qtyPreview').textContent=c+' kcal ／ タンパク質 '+p+'g'; } }
 function confirmLog(){ if(!pendingFood)return; const now=new Date(); const time=now.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'}); if(!S.logs[S.date])S.logs[S.date]=[]; S.logs[S.date].push({id:uid(),fid:pendingFood.id,qty:pendingQty,time}); closeModal('mQty');renderLog();renderChart();save();showToast('記録しました ✓'); }
@@ -1543,7 +1670,7 @@ function renderFoods(){
     el.innerHTML='<div class="empty"><span class="empty-ico">🥗</span>食品が登録されていません<br>上の緑のバナーから追加！</div>';
     return;
   }
-  const renderFoodItem=(f)=>'<div class="food-item"><div class="food-emoji">'+escapeHtml(f.emoji)+'</div><div class="food-info"><div class="food-name">'+escapeHtml(f.name)+'</div><div class="food-macro">'+f.cal+' kcal ／ タンパク質 '+f.prot+'g ・ 使用 '+getFoodUseCount(f.id)+'回</div></div><div class="food-acts"><button class="act-btn green" onclick="quickLog(\''+safeId(f.id)+'\')">+ 記録</button><button class="act-btn edit" onclick="openEditFood(\''+safeId(f.id)+'\')">編集</button><button class="act-btn red" onclick="delFood(\''+safeId(f.id)+'\')">×</button></div></div>';
+  const renderFoodItem=(f)=>'<div class="food-item"><div class="food-emoji">'+escapeHtml(f.emoji)+'</div><div class="food-info"><div class="food-name">'+escapeHtml(f.name)+'</div><div class="food-macro">'+foodBasisLabel(f)+f.cal+' kcal ／ タンパク質 '+f.prot+'g ・ 使用 '+getFoodUseCount(f.id)+'回</div></div><div class="food-acts"><button class="act-btn green" onclick="quickLog(\''+safeId(f.id)+'\')">+ 記録</button><button class="act-btn edit" onclick="openEditFood(\''+safeId(f.id)+'\')">編集</button><button class="act-btn red" onclick="delFood(\''+safeId(f.id)+'\')">×</button></div></div>';
   const normalHtml=normalFoods.map(renderFoodItem).join('');
   const alcoholHtml=alcoholFoods.length ? '<div class="group-card">'
     +'<div class="group-head" onclick="toggleAlcoholFoodGroup()">'
@@ -1639,7 +1766,7 @@ function importData(event){
     try{
       const candidate=validateState(parseBackup(reader.result));
       S=candidate;
-      normalizeWeightHistory();snapshotFoods(S);ensureAlcoholDefaults(false);
+      normalizeWeightHistory();snapshotFoods(S);ensureAlcoholDefaults(false);ensureRiceDefault(false);
       // Render before persisting, so a rendering error also leaves the saved backup intact.
       refreshDate();renderWeightPage();renderGoals();renderFoods();
       unreadableStorage=false;
@@ -1847,6 +1974,7 @@ load();
 S.date = todayStr();
 addDefaults();
 ensureAlcoholDefaults();
+ensureRiceDefault();
 normalizeWeightHistory();
 if(!unreadableStorage)save();
 renderDate(); renderLog(); renderWeightPage(); renderWorkoutPage(); renderGoals(); renderFoods();
